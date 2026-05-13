@@ -1,0 +1,40 @@
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.*
+!env.example
+
+# Dependencies
+node_modules/
+vendor/
+
+# Laravel
+storage/framework/cache/data/
+storage/framework/sessions/
+storage/framework/views/
+storage/logs/
+public/hot
+public/storage
+public/build
+/.phpunit.cache
+/.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+auth.json
+
+# Fleet
+/.fleet
+/.nova
+/.zed
+.phpactor.json
