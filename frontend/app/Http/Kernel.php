@@ -9,7 +9,7 @@ class Kernel extends HttpKernel
     /**
      * The application's route middleware groups.
      *
-     * @var array
+     * @var array<string, array<int, string>>
      */
     protected $middlewareGroups = [
         'web' => [
@@ -26,9 +26,9 @@ class Kernel extends HttpKernel
     /**
      * The application's middleware aliases.
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $middlewareAliases = [
         // Middleware aliases are now registered in bootstrap/app.php for Laravel 11
     ];
-} 
+}

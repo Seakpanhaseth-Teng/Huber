@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DriverDocument;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use App\Models\User;
-use App\Models\DriverDocument;
 
 class RegisterController extends Controller
 {
@@ -33,7 +32,7 @@ class RegisterController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-            ]
+            ],
         ]);
     }
 
@@ -93,7 +92,7 @@ class RegisterController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-            ]
+            ],
         ]);
     }
 
@@ -106,7 +105,7 @@ class RegisterController extends Controller
                     'driver_license' => $request->hasFile('driver_license_file'),
                     'vehicle_registration' => $request->hasFile('vehicle_registration_file'),
                     'insurance_certificate' => $request->hasFile('insurance_certificate_file'),
-                ]
+                ],
             ]);
 
             $validated = $request->validate([
@@ -154,34 +153,34 @@ class RegisterController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Documents uploaded successfully!'
+                'message' => 'Documents uploaded successfully!',
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed in driver docs upload', [
                 'errors' => $e->errors(),
-                'user_id' => $request->input('user_id')
+                'user_id' => $request->input('user_id'),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed: ' . implode(', ', array_map(function($errors) {
+                'message' => 'Validation failed: ' . implode(', ', array_map(function ($errors) {
                     return implode(', ', $errors);
                 }, $e->errors())),
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             \Log::error('Error in driver docs upload', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'user_id' => $request->input('user_id')
+                'user_id' => $request->input('user_id'),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while uploading documents. Please try again.'
+                'message' => 'An error occurred while uploading documents. Please try again.',
             ], 500);
         }
     }
-} 
+}

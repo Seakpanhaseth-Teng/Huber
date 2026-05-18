@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -14,6 +13,7 @@ class BookingReceipt extends Mailable
     use Queueable, SerializesModels;
 
     public $booking;
+
     public $user;
 
     /**
@@ -60,8 +60,10 @@ class BookingReceipt extends Mailable
      */
     public function build()
     {
+        /** @phpstan-var view-string $template */
+        $template = 'emails.booking-receipt';
         return $this->subject('Your Ride Booking Receipt - ' . $this->booking->booking_reference)
-            ->markdown('emails.booking-receipt', ['layout' => 'emails.layouts.app'])
+            ->markdown($template, ['layout' => 'emails.layouts.app'])
             ->with([
                 'booking' => $this->booking,
                 'user' => $this->user,

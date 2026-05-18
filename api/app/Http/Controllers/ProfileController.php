@@ -2,33 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
     public function show()
     {
+        /** @var \App\Models\User|null $user */
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to access your profile.');
         }
 
         // Split name into first and last name
         $nameParts = explode(' ', $user->name, 2);
-        $user->first_name = $nameParts[0] ?? '';
-        $user->last_name = $nameParts[1] ?? '';
+        $firstName = $nameParts[0];
+        $lastName = $nameParts[1] ?? '';
 
-        return view('profile', compact('user'));
+        return view('profile', compact('user', 'firstName', 'lastName'));
     }
 
     public function update(Request $request)
     {
+        /** @var \App\Models\User|null $user */
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to update your profile.');
         }
 
@@ -79,7 +80,7 @@ class ProfileController extends Controller
                 if ($user->profile_picture) {
                     Storage::disk('public')->delete($user->profile_picture);
                 }
-                
+
                 // Store new profile picture
                 $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
                 $user->profile_picture = $profilePicturePath;
@@ -119,26 +120,29 @@ class ProfileController extends Controller
     public function apiShow(Request $request)
     {
         // Get user from token authentication
+        /** @var \App\Models\User|null $user */
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to access your profile.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
         // Split name into first and last name
         $nameParts = explode(' ', $user->name, 2);
-        $user->first_name = $nameParts[0] ?? '';
-        $user->last_name = $nameParts[1] ?? '';
+        $firstName = $nameParts[0];
+        $lastName = $nameParts[1] ?? '';
 
         return response()->json([
             'message' => 'Profile retrieved successfully',
             'status' => 'success',
             'data' => [
                 'user' => $user,
-                'role' => $user->role ?? 'user'
-            ]
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'role' => $user->role ?? 'user',
+            ],
         ]);
     }
 
@@ -146,10 +150,10 @@ class ProfileController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to update your profile.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
@@ -172,7 +176,7 @@ class ProfileController extends Controller
             return response()->json([
                 'message' => 'Validation failed',
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -193,15 +197,15 @@ class ProfileController extends Controller
                 'message' => 'Profile updated successfully!',
                 'status' => 'success',
                 'data' => [
-                    'user' => $user
-                ]
+                    'user' => $user,
+                ],
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'An error occurred while updating your profile. Please try again.',
-                'status' => 'error'
+                'status' => 'error',
             ], 500);
         }
     }
-} 
+}

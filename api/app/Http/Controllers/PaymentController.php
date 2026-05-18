@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -14,23 +14,23 @@ class PaymentController extends Controller
     public function showPaymentPage(Request $request, $rideId, $tripType = 'go')
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to complete payment.');
         }
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
         // Get booking details from session (set during seat selection)
         $bookingData = session('pending_booking_data');
-        
+
         // If no booking data and this is an exclusive ride, create default booking data
-        if (!$bookingData) {
+        if (! $bookingData) {
             // Check if this is an exclusive ride
             $isExclusive = ($tripType === 'return' && $ride->is_two_way) ? $ride->return_is_exclusive : $ride->is_exclusive;
-            
+
             if ($isExclusive) {
                 // Create default booking data for exclusive rides
                 $bookingData = [
@@ -41,17 +41,17 @@ class PaymentController extends Controller
                         [
                             'name' => $user->name,
                             'seat_number' => 1,
-                            'phone' => $user->phone
-                        ]
+                            'phone' => $user->phone,
+                        ],
                     ],
                     'contact_phone' => $user->phone,
-                    'special_requests' => ''
+                    'special_requests' => '',
                 ];
             } else {
                 return redirect()->route('find.rides')->with('error', 'No booking data found. Please select seats first.');
             }
         }
-        
+
         // Determine price and details based on trip type
         if ($tripType === 'return' && $ride->is_two_way) {
             $pricePerSeat = $ride->return_is_exclusive ? $ride->return_exclusive_price : $ride->return_price_per_person;
@@ -65,13 +65,15 @@ class PaymentController extends Controller
             $availableSeats = $ride->available_seats;
         }
 
-        return view('booking.payment', compact(
-            'ride', 
-            'user', 
-            'tripType', 
-            'pricePerSeat', 
-            'date', 
-            'time', 
+        /** @phpstan-var view-string $view */
+        $view = 'booking.payment';
+        return view($view, compact(
+            'ride',
+            'user',
+            'tripType',
+            'pricePerSeat',
+            'date',
+            'time',
             'bookingData'
         ));
     }
@@ -79,23 +81,23 @@ class PaymentController extends Controller
     public function processPayment(Request $request, $rideId, $tripType = 'go')
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to complete payment.');
         }
 
         $ride = Ride::find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
         // Get booking data from session
         $bookingData = session('pending_booking_data');
-        
+
         // If no booking data and this is an exclusive ride, create default booking data
-        if (!$bookingData) {
+        if (! $bookingData) {
             // Check if this is an exclusive ride
             $isExclusive = ($tripType === 'return' && $ride->is_two_way) ? $ride->return_is_exclusive : $ride->is_exclusive;
-            
+
             if ($isExclusive) {
                 // Create default booking data for exclusive rides
                 $bookingData = [
@@ -106,11 +108,11 @@ class PaymentController extends Controller
                         [
                             'name' => $user->name,
                             'seat_number' => 1,
-                            'phone' => $user->phone
-                        ]
+                            'phone' => $user->phone,
+                        ],
                     ],
                     'contact_phone' => $user->phone,
-                    'special_requests' => ''
+                    'special_requests' => '',
                 ];
             } else {
                 return redirect()->route('find.rides')->with('error', 'No booking data found. Please select seats first.');
@@ -129,8 +131,9 @@ class PaymentController extends Controller
 
             // Lock the ride row to prevent concurrent seat overselling
             $ride = Ride::where('id', $rideId)->lockForUpdate()->first();
-            if (!$ride) {
+            if (! $ride) {
                 DB::rollBack();
+
                 return redirect()->route('find.rides')->with('error', 'Ride not found.');
             }
 
@@ -148,9 +151,10 @@ class PaymentController extends Controller
             }
 
             // Re-check seat availability after acquiring the lock
-            $numberOfSeats = (int)($bookingData['number_of_seats'] ?? 0);
+            $numberOfSeats = (int) ($bookingData['number_of_seats'] ?? 0);
             if ($availableSeats <= 0 || $numberOfSeats > $availableSeats) {
                 DB::rollBack();
+
                 return redirect()->route('find.rides')->with('error', 'Not enough seats available.');
             }
 
@@ -215,7 +219,7 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Payment processing failed: ' . $e->getMessage());
-            
+
             return back()->withErrors(['general' => 'An error occurred while processing your payment. Please try again.']);
         }
     }
@@ -223,23 +227,23 @@ class PaymentController extends Controller
     public function showQRPayment(Request $request, $rideId, $tripType = 'go')
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to complete payment.');
         }
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
         // Get booking details from session
         $bookingData = session('pending_booking_data');
-        
+
         // If no booking data and this is an exclusive ride, create default booking data
-        if (!$bookingData) {
+        if (! $bookingData) {
             // Check if this is an exclusive ride
             $isExclusive = ($tripType === 'return' && $ride->is_two_way) ? $ride->return_is_exclusive : $ride->is_exclusive;
-            
+
             if ($isExclusive) {
                 // Create default booking data for exclusive rides
                 $bookingData = [
@@ -250,11 +254,11 @@ class PaymentController extends Controller
                         [
                             'name' => $user->name,
                             'seat_number' => 1,
-                            'phone' => $user->phone
-                        ]
+                            'phone' => $user->phone,
+                        ],
                     ],
                     'contact_phone' => $user->phone,
-                    'special_requests' => ''
+                    'special_requests' => '',
                 ];
             } else {
                 return redirect()->route('find.rides')->with('error', 'No booking data found. Please select seats first.');
@@ -277,13 +281,15 @@ class PaymentController extends Controller
         // Calculate total price
         $totalPrice = $ride->is_exclusive || ($tripType === 'return' && $ride->return_is_exclusive) ? $pricePerSeat : ($pricePerSeat * $bookingData['number_of_seats']);
 
-        return view('booking.qr-payment', compact(
-            'ride', 
-            'user', 
-            'tripType', 
-            'pricePerSeat', 
-            'date', 
-            'time', 
+        /** @phpstan-var view-string $view */
+        $view = 'booking.qr-payment';
+        return view($view, compact(
+            'ride',
+            'user',
+            'tripType',
+            'pricePerSeat',
+            'date',
+            'time',
             'bookingData',
             'totalPrice'
         ));
@@ -294,29 +300,29 @@ class PaymentController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to complete payment.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return response()->json([
                 'message' => 'Ride not found.',
-                'status' => 'error'
+                'status' => 'error',
             ], 404);
         }
 
         // Get booking data from request (should be passed from booking process)
         $bookingData = $request->input('booking_data');
-        
+
         // If no booking data and this is an exclusive ride, create default booking data
-        if (!$bookingData) {
+        if (! $bookingData) {
             // Check if this is an exclusive ride
             $isExclusive = ($tripType === 'return' && $ride->is_two_way) ? $ride->return_is_exclusive : $ride->is_exclusive;
-            
+
             if ($isExclusive) {
                 // Create default booking data for exclusive rides
                 $bookingData = [
@@ -327,20 +333,20 @@ class PaymentController extends Controller
                         [
                             'name' => $user->name,
                             'seat_number' => 1,
-                            'phone' => $user->phone
-                        ]
+                            'phone' => $user->phone,
+                        ],
                     ],
                     'contact_phone' => $user->phone,
-                    'special_requests' => ''
+                    'special_requests' => '',
                 ];
             } else {
                 return response()->json([
                     'message' => 'No booking data found. Please select seats first.',
-                    'status' => 'error'
+                    'status' => 'error',
                 ], 400);
             }
         }
-        
+
         // Determine price and details based on trip type
         if ($tripType === 'return' && $ride->is_two_way) {
             $pricePerSeat = $ride->return_is_exclusive ? $ride->return_exclusive_price : $ride->return_price_per_person;
@@ -364,8 +370,8 @@ class PaymentController extends Controller
                 'price_per_seat' => $pricePerSeat,
                 'date' => $date,
                 'time' => $time,
-                'booking_data' => $bookingData
-            ]
+                'booking_data' => $bookingData,
+            ],
         ]);
     }
 
@@ -373,29 +379,29 @@ class PaymentController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to complete payment.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
         $ride = Ride::find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return response()->json([
                 'message' => 'Ride not found.',
-                'status' => 'error'
+                'status' => 'error',
             ], 404);
         }
 
         // Get booking data from request
         $bookingData = $request->input('booking_data');
-        
+
         // If no booking data and this is an exclusive ride, create default booking data
-        if (!$bookingData) {
+        if (! $bookingData) {
             // Check if this is an exclusive ride
             $isExclusive = ($tripType === 'return' && $ride->is_two_way) ? $ride->return_is_exclusive : $ride->is_exclusive;
-            
+
             if ($isExclusive) {
                 // Create default booking data for exclusive rides
                 $bookingData = [
@@ -406,16 +412,16 @@ class PaymentController extends Controller
                         [
                             'name' => $user->name,
                             'seat_number' => 1,
-                            'phone' => $user->phone
-                        ]
+                            'phone' => $user->phone,
+                        ],
                     ],
                     'contact_phone' => $user->phone,
-                    'special_requests' => ''
+                    'special_requests' => '',
                 ];
             } else {
                 return response()->json([
                     'message' => 'No booking data found. Please select seats first.',
-                    'status' => 'error'
+                    'status' => 'error',
                 ], 400);
             }
         }
@@ -429,7 +435,7 @@ class PaymentController extends Controller
             return response()->json([
                 'message' => 'Validation failed',
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -440,11 +446,12 @@ class PaymentController extends Controller
 
             // Lock the ride row to prevent concurrent seat overselling
             $ride = Ride::where('id', $rideId)->lockForUpdate()->first();
-            if (!$ride) {
+            if (! $ride) {
                 DB::rollBack();
+
                 return response()->json([
                     'message' => 'Ride not found.',
-                    'status' => 'error'
+                    'status' => 'error',
                 ], 404);
             }
 
@@ -455,12 +462,13 @@ class PaymentController extends Controller
                 $availableSeats = $ride->available_seats;
             }
 
-            $numberOfSeats = (int)($bookingData['number_of_seats'] ?? 0);
+            $numberOfSeats = (int) ($bookingData['number_of_seats'] ?? 0);
             if ($availableSeats <= 0 || $numberOfSeats > $availableSeats) {
                 DB::rollBack();
+
                 return response()->json([
                     'message' => 'Not enough seats available.',
-                    'status' => 'error'
+                    'status' => 'error',
                 ], 409);
             }
 
@@ -481,7 +489,7 @@ class PaymentController extends Controller
             $bookingReference = 'HUBER-' . strtoupper(uniqid());
 
             // Create the booking
-            $ridePurchase = new RidePurchase();
+            $ridePurchase = new RidePurchase;
             $ridePurchase->user_id = $user->id;
             $ridePurchase->ride_id = $rideId;
             $ridePurchase->trip_type = $tripType;
@@ -497,7 +505,7 @@ class PaymentController extends Controller
             $ridePurchase->payment_status = 'completed';
             $ridePurchase->payment_reference = $paymentReference;
             $ridePurchase->payment_date = now();
-            
+
             $ridePurchase->save();
 
             // Decrement available seats atomically
@@ -517,15 +525,16 @@ class PaymentController extends Controller
                     'booking_reference' => $bookingReference,
                     'total_amount' => $totalPrice,
                     'payment_method' => $paymentMethod,
-                    'ride' => $ride
-                ]
+                    'ride' => $ride,
+                ],
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'message' => 'An error occurred while processing payment.',
-                'status' => 'error'
+                'status' => 'error',
             ], 500);
         }
     }
@@ -534,29 +543,29 @@ class PaymentController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to complete payment.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return response()->json([
                 'message' => 'Ride not found.',
-                'status' => 'error'
+                'status' => 'error',
             ], 404);
         }
 
         // Get booking data from request
         $bookingData = $request->input('booking_data');
-        
+
         // If no booking data and this is an exclusive ride, create default booking data
-        if (!$bookingData) {
+        if (! $bookingData) {
             // Check if this is an exclusive ride
             $isExclusive = ($tripType === 'return' && $ride->is_two_way) ? $ride->return_is_exclusive : $ride->is_exclusive;
-            
+
             if ($isExclusive) {
                 // Create default booking data for exclusive rides
                 $bookingData = [
@@ -567,20 +576,20 @@ class PaymentController extends Controller
                         [
                             'name' => $user->name,
                             'seat_number' => 1,
-                            'phone' => $user->phone
-                        ]
+                            'phone' => $user->phone,
+                        ],
                     ],
                     'contact_phone' => $user->phone,
-                    'special_requests' => ''
+                    'special_requests' => '',
                 ];
             } else {
                 return response()->json([
                     'message' => 'No booking data found. Please select seats first.',
-                    'status' => 'error'
+                    'status' => 'error',
                 ], 400);
             }
         }
-        
+
         // Determine price and details based on trip type
         if ($tripType === 'return' && $ride->is_two_way) {
             $pricePerSeat = $ride->return_is_exclusive ? $ride->return_exclusive_price : $ride->return_price_per_person;
@@ -604,7 +613,7 @@ class PaymentController extends Controller
             'user_id' => $user->id,
             'total_amount' => $totalPrice,
             'booking_data' => $bookingData,
-            'timestamp' => now()->timestamp
+            'timestamp' => now()->timestamp,
         ]);
 
         return response()->json([
@@ -619,8 +628,8 @@ class PaymentController extends Controller
                 'date' => $date,
                 'time' => $time,
                 'booking_data' => $bookingData,
-                'qr_data' => $qrData
-            ]
+                'qr_data' => $qrData,
+            ],
         ]);
     }
 }

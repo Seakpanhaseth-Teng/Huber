@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class PasswordChangeController extends Controller
 {
@@ -24,7 +23,7 @@ class PasswordChangeController extends Controller
         ]);
 
         // Check current password
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'Current password is incorrect.'])->withInput();
         }
 
@@ -34,4 +33,4 @@ class PasswordChangeController extends Controller
 
         return redirect()->route('user.profile')->with('success', 'Password changed successfully!');
     }
-} 
+}

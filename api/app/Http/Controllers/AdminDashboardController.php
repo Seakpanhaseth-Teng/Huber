@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Ride;
-use App\Models\DriverDocument;
 use App\Models\RidePurchase;
+use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
 class AdminDashboardController extends Controller
@@ -22,12 +21,15 @@ class AdminDashboardController extends Controller
             ];
         });
 
-        return view('admin.dashboard', $stats);
+        /** @phpstan-var view-string $view */
+        $view = 'admin.dashboard';
+        return view($view, $stats);
     }
 
     public function apiIndex()
     {
         $stats = Cache::remember('dashboard_api_stats', 300, function () {
+            /** @var object{total_users: int, total_drivers: int, total_verified_drivers: int} $userStats */
             $userStats = User::selectRaw('count(*) as total_users,
                 count(case when role = "driver" then 1 end) as total_drivers,
                 count(case when role = "driver" and is_verified then 1 end) as total_verified_drivers')

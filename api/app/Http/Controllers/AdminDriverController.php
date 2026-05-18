@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Ride;
-use App\Models\RidePurchase;
-use App\Models\RideReview;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Cache;
 use App\Services\DriverStatsService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 
 class AdminDriverController extends Controller
 {
@@ -25,7 +22,10 @@ class AdminDriverController extends Controller
         $drivers = User::where('role', 'driver')
             ->with(['rides', 'driverDocuments'])
             ->paginate(12);
-        return view('admin.drivers.index', compact('drivers'));
+
+        /** @phpstan-var view-string $view */
+        $view = 'admin.drivers.index';
+        return view($view, compact('drivers'));
     }
 
     public function show($id)
@@ -38,7 +38,9 @@ class AdminDriverController extends Controller
             return $this->driverStatsService->getDriverStats($driver);
         });
 
-        return view('admin.drivers.show', compact(
+        /** @phpstan-var view-string $view */
+        $view = 'admin.drivers.show';
+        return view($view, compact(
             'driver',
             'stats'
         ) + [
@@ -53,7 +55,9 @@ class AdminDriverController extends Controller
 
     public function create()
     {
-        return view('admin.drivers.create');
+        /** @phpstan-var view-string $view */
+        $view = 'admin.drivers.create';
+        return view($view);
     }
 
     public function store(Request $request)
@@ -70,13 +74,17 @@ class AdminDriverController extends Controller
             'role' => 'driver',
             'is_verified' => false,
         ]);
+
         return redirect()->route('admin.drivers.index')->with('success', 'Driver created successfully');
     }
 
     public function edit($id)
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
-        return view('admin.drivers.edit', compact('driver'));
+
+        /** @phpstan-var view-string $view */
+        $view = 'admin.drivers.edit';
+        return view($view, compact('driver'));
     }
 
     public function update(Request $request, $id)
@@ -93,6 +101,7 @@ class AdminDriverController extends Controller
             $driver->password = Hash::make($request->password);
         }
         $driver->save();
+
         return redirect()->route('admin.drivers.index')->with('success', 'Driver updated successfully');
     }
 
@@ -100,6 +109,7 @@ class AdminDriverController extends Controller
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->delete();
+
         return redirect()->route('admin.drivers.index')->with('success', 'Driver deleted successfully');
     }
 
@@ -107,6 +117,7 @@ class AdminDriverController extends Controller
     public function apiIndex()
     {
         $drivers = User::where('role', 'driver')->with(['rides', 'driverDocuments'])->paginate(12);
+
         return response()->json([
             'success' => true,
             'data' => $drivers,
@@ -127,6 +138,7 @@ class AdminDriverController extends Controller
             'role' => 'driver',
             'is_verified' => false,
         ]);
+
         return response()->json(['success' => true, 'data' => $driver]);
     }
 
@@ -162,10 +174,11 @@ class AdminDriverController extends Controller
         ]);
         $driver->name = $validated['name'];
         $driver->email = $validated['email'];
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $driver->password = \Illuminate\Support\Facades\Hash::make($validated['password']);
         }
         $driver->save();
+
         return response()->json(['success' => true, 'data' => $driver]);
     }
 
@@ -173,6 +186,7 @@ class AdminDriverController extends Controller
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->delete();
+
         return response()->json(['success' => true, 'message' => 'Driver deleted successfully.']);
     }
 }

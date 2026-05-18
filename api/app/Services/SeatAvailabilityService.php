@@ -36,12 +36,14 @@ class SeatAvailabilityService
     public function checkAvailability(Ride $ride, string $tripType, int $seatsRequired = 1): bool
     {
         $pricing = app(RidePricingService::class)->getPricing($ride, $tripType);
+
         return $pricing['available_seats'] >= $seatsRequired;
     }
 
     public function getConflictingSeats(int $rideId, string $tripType, array $selectedSeats): array
     {
         $bookedSeats = $this->getBookedSeatsEloquent($rideId, $tripType);
+
         return array_intersect($selectedSeats, $bookedSeats);
     }
 }

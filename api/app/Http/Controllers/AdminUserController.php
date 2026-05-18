@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class AdminUserController extends Controller
@@ -14,10 +14,13 @@ class AdminUserController extends Controller
     public function index()
     {
         $users = User::where('role', '!=', 'driver')
-                    ->orWhereNull('role')
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(10);
-        return view('admin.users.index', compact('users'));
+            ->orWhereNull('role')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        /** @phpstan-var view-string $view */
+        $view = 'admin.users.index';
+        return view($view, compact('users'));
     }
 
     /**
@@ -25,7 +28,9 @@ class AdminUserController extends Controller
      */
     public function create()
     {
-        return view('admin.users.create');
+        /** @phpstan-var view-string $view */
+        $view = 'admin.users.create';
+        return view($view);
     }
 
     /**
@@ -49,7 +54,7 @@ class AdminUserController extends Controller
         ]);
 
         return redirect()->route('admin.users.index')
-                        ->with('success', 'User created successfully.');
+            ->with('success', 'User created successfully.');
     }
 
     /**
@@ -58,7 +63,10 @@ class AdminUserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        return view('admin.users.edit', compact('user'));
+
+        /** @phpstan-var view-string $view */
+        $view = 'admin.users.edit';
+        return view($view, compact('user'));
     }
 
     /**
@@ -67,7 +75,7 @@ class AdminUserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
@@ -87,7 +95,7 @@ class AdminUserController extends Controller
         }
 
         return redirect()->route('admin.users.index')
-                        ->with('success', 'User updated successfully.');
+            ->with('success', 'User updated successfully.');
     }
 
     /**
@@ -99,7 +107,7 @@ class AdminUserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')
-                        ->with('success', 'User deleted successfully.');
+            ->with('success', 'User deleted successfully.');
     }
 
     /**
@@ -109,31 +117,43 @@ class AdminUserController extends Controller
     {
         $user = User::with(['ridePurchases.ride', 'rides'])->findOrFail($id);
         $today = now()->toDateString();
-        $currentBookings = $user->ridePurchases->filter(function($b) use ($today) {
-            return optional($b->ride)->date >= $today;
+        $currentBookings = $user->ridePurchases->filter(function ($b) use ($today) {
+            /** @var \App\Models\RidePurchase $b */
+            /** @var \App\Models\Ride|null $ride */
+            $ride = $b->ride;
+            return $ride && $ride->date >= $today;
         });
-        $pastBookings = $user->ridePurchases->filter(function($b) use ($today) {
-            return optional($b->ride)->date < $today;
+        $pastBookings = $user->ridePurchases->filter(function ($b) use ($today) {
+            /** @var \App\Models\RidePurchase $b */
+            /** @var \App\Models\Ride|null $ride */
+            $ride = $b->ride;
+            return $ride && $ride->date < $today;
         });
-        $currentRides = $user->rides->filter(function($r) use ($today) {
+        $currentRides = $user->rides->filter(function ($r) use ($today) {
+            /** @var \App\Models\Ride $r */
             return $r->date >= $today;
         });
-        $pastRides = $user->rides->filter(function($r) use ($today) {
+        $pastRides = $user->rides->filter(function ($r) use ($today) {
+            /** @var \App\Models\Ride $r */
             return $r->date < $today;
         });
-        return view('admin.users.show', compact('user', 'currentBookings', 'pastBookings', 'currentRides', 'pastRides'));
+
+        /** @phpstan-var view-string $view */
+        $view = 'admin.users.show';
+        return view($view, compact('user', 'currentBookings', 'pastBookings', 'currentRides', 'pastRides'));
     }
 
     // API: List users
     public function apiIndex()
     {
         $users = User::where('role', '!=', 'driver')
-                    ->orWhereNull('role')
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(10);
+            ->orWhereNull('role')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
         return response()->json([
             'success' => true,
-            'data' => $users
+            'data' => $users,
         ]);
     }
 
@@ -153,9 +173,10 @@ class AdminUserController extends Controller
             'phone' => $validated['phone'],
             'role' => 'user',
         ]);
+
         return response()->json([
             'success' => true,
-            'data' => $user
+            'data' => $user,
         ]);
     }
 
@@ -163,9 +184,10 @@ class AdminUserController extends Controller
     public function apiShow($id)
     {
         $user = User::with(['ridePurchases.ride', 'rides'])->findOrFail($id);
+
         return response()->json([
             'success' => true,
-            'data' => $user
+            'data' => $user,
         ]);
     }
 
@@ -185,12 +207,13 @@ class AdminUserController extends Controller
             'phone' => $validated['phone'],
             'role' => 'user',
         ]);
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->update(['password' => \Illuminate\Support\Facades\Hash::make($validated['password'])]);
         }
+
         return response()->json([
             'success' => true,
-            'data' => $user
+            'data' => $user,
         ]);
     }
 
@@ -199,9 +222,10 @@ class AdminUserController extends Controller
     {
         $user = User::findOrFail($id);
         $user->delete();
+
         return response()->json([
             'success' => true,
-            'message' => 'User deleted successfully.'
+            'message' => 'User deleted successfully.',
         ]);
     }
-} 
+}

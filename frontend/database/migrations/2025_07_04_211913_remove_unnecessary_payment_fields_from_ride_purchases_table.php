@@ -16,7 +16,7 @@ return new class extends Migration
             $table->dropColumn([
                 'card_last_four',
                 'card_type',
-                'payment_completed_at'
+                'payment_completed_at',
             ]);
         });
     }

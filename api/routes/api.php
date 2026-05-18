@@ -3,31 +3,31 @@
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes
-    Route::post('/login', [\App\Http\Controllers\LoginController::class, 'apiLogin'])
-        ->middleware('throttle:login');
-    Route::post('/logout', [\App\Http\Controllers\LoginController::class, 'apiLogout']);
-    Route::post('/register', [\App\Http\Controllers\RegisterController::class, 'apiRegister']);
-    Route::post('/register-driver', [\App\Http\Controllers\RegisterController::class, 'apiRegisterDriver']);
-    Route::post('/register-driver-docs', [\App\Http\Controllers\RegisterController::class, 'apiRegisterDriverDocs']);
+Route::post('/login', [\App\Http\Controllers\LoginController::class, 'apiLogin'])
+    ->middleware('throttle:login');
+Route::post('/logout', [\App\Http\Controllers\LoginController::class, 'apiLogout']);
+Route::post('/register', [\App\Http\Controllers\RegisterController::class, 'apiRegister']);
+Route::post('/register-driver', [\App\Http\Controllers\RegisterController::class, 'apiRegisterDriver']);
+Route::post('/register-driver-docs', [\App\Http\Controllers\RegisterController::class, 'apiRegisterDriverDocs']);
 
 // Home route
 Route::get('/', [\App\Http\Controllers\HomeController::class, 'apiIndex']);
 
 // Protected routes (require authentication)
-    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     // User Profile routes
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'apiShow']);
     Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'apiUpdate']);
-    
+
     // Password change
     Route::get('/password/change', [\App\Http\Controllers\PasswordChangeController::class, 'apiShow']);
     Route::put('/password/change', [\App\Http\Controllers\PasswordChangeController::class, 'apiUpdate']);
-    
+
     // Driver Profile routes
     Route::get('/driver/profile', [\App\Http\Controllers\DriverProfileController::class, 'apiShow']);
     Route::put('/driver/vehicle-photos', [\App\Http\Controllers\DriverProfileController::class, 'apiUpdateVehiclePhotos']);
     Route::get('/driver/profile/{id}', [\App\Http\Controllers\DriverProfileController::class, 'apiShowPublic']);
-    
+
     // Driver Ride Management routes
     Route::get('/driver/ride-management', [\App\Http\Controllers\DriverRideManagementController::class, 'apiIndex']);
     Route::get('/driver/rides/create', [\App\Http\Controllers\DriverRideManagementController::class, 'apiCreate']);
@@ -37,7 +37,7 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'apiIndex']);
     Route::put('/driver/rides/{id}', [\App\Http\Controllers\DriverRideManagementController::class, 'apiUpdate']);
     Route::get('/driver/rides/{id}/customers', [\App\Http\Controllers\DriverRideManagementController::class, 'apiShowRideCustomers']);
     Route::get('/driver/earnings', [\App\Http\Controllers\DriverRideManagementController::class, 'apiEarnings']);
-    
+
     // Find Rides
     Route::get('/find-rides', [\App\Http\Controllers\BookingController::class, 'apiFindRides']);
 
@@ -48,17 +48,17 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'apiIndex']);
     Route::post('/booking/process/{id}/{tripType?}', [\App\Http\Controllers\BookingController::class, 'apiProcessBooking']);
     Route::get('/booking/thank-you/{id}', [\App\Http\Controllers\BookingController::class, 'apiShowThankYou']);
     Route::get('/booking/confirmation/{id}', [\App\Http\Controllers\BookingController::class, 'apiShowConfirmation']);
-    
+
     // Payment routes
     Route::get('/payment/{id}/{tripType?}', [\App\Http\Controllers\PaymentController::class, 'apiShowPaymentPage']);
     Route::post('/payment/process/{id}/{tripType?}', [\App\Http\Controllers\PaymentController::class, 'apiProcessPayment']);
     Route::get('/payment/qr/{id}/{tripType?}', [\App\Http\Controllers\PaymentController::class, 'apiShowQRPayment']);
-    
+
     // User Bookings
     Route::get('/user/bookings', [\App\Http\Controllers\UserBookingController::class, 'apiIndex']);
     Route::get('/user/bookings/{id}', [\App\Http\Controllers\UserBookingController::class, 'apiShow']);
     Route::get('/user/bookings/{id}/receipt', [\App\Http\Controllers\UserBookingController::class, 'apiPrintReceipt']);
-    
+
     // Ride Completion routes
     Route::post('/driver/rides/{id}/ongoing/{tripType?}', [\App\Http\Controllers\RideCompletionController::class, 'apiMarkAsOngoing']);
     Route::post('/driver/rides/{id}/complete/{tripType?}', [\App\Http\Controllers\RideCompletionController::class, 'apiMarkAsCompleted']);
@@ -66,8 +66,8 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'apiIndex']);
     Route::post('/user/bookings/{id}/review/{tripType?}', [\App\Http\Controllers\RideCompletionController::class, 'apiSubmitReview']);
     Route::get('/driver/rides/{id}/reviews', [\App\Http\Controllers\RideCompletionController::class, 'apiViewRideReviews']);
     Route::get('/driver/reviews', [\App\Http\Controllers\RideCompletionController::class, 'apiViewAllReviews']);
-    
-    });
+
+});
 
 // Admin authentication (public)
 Route::post('/admin/login', [\App\Http\Controllers\AdminAuthController::class, 'apiLogin']);
@@ -108,4 +108,4 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     Route::delete('/driver-documents/{id}', [\App\Http\Controllers\AdminDriverDocumentController::class, 'apiDestroy']);
     Route::post('/driver-documents/{id}/verify', [\App\Http\Controllers\AdminDriverDocumentController::class, 'apiVerify']);
     Route::post('/driver-documents/{id}/unverify', [\App\Http\Controllers\AdminDriverDocumentController::class, 'apiUnverify']);
-}); 
+});

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DriverDocument extends Model
 {
@@ -20,13 +21,13 @@ class DriverDocument extends Model
         'terms_accepted',
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function driver()
+    public function driver(): BelongsTo
     {
         return $this->user();
     }
-} 
+}

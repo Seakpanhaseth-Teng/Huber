@@ -117,6 +117,7 @@ class RideValidationService
             }
             $validated['go_to_exclusive_price'] = null;
         }
+
         return null;
     }
 
@@ -148,6 +149,7 @@ class RideValidationService
             $validated['return_price_per_person'] = null;
             $validated['return_exclusive_price'] = null;
         }
+
         return null;
     }
 }

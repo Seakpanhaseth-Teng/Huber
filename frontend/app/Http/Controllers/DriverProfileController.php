@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DriverDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use App\Models\DriverDocument;
 
 class DriverProfileController extends Controller
 {
@@ -15,7 +13,7 @@ class DriverProfileController extends Controller
         $user = auth()->user();
 
         $driverDocuments = DriverDocument::where('user_id', $user->id)->first();
-        
+
         return view('driver-profile', compact('user', 'driverDocuments'));
     }
 
@@ -31,7 +29,7 @@ class DriverProfileController extends Controller
 
         $driverDocuments = DriverDocument::where('user_id', $user->id)->first();
 
-        if (!$driverDocuments) {
+        if (! $driverDocuments) {
             return redirect()->back()->with('error', 'Driver documents not found.');
         }
 
@@ -69,6 +67,7 @@ class DriverProfileController extends Controller
 
         if ($updated) {
             $driverDocuments->save();
+
             return redirect()->back()->with('success', 'Vehicle photos updated successfully.');
         }
 
@@ -79,10 +78,10 @@ class DriverProfileController extends Controller
     {
         $user = \App\Models\User::where('id', $driverId)->where('role', 'driver')->firstOrFail();
         $driverDocuments = \App\Models\DriverDocument::where('user_id', $user->id)->first();
-        
+
         // Get all reviews for this driver
         $reviews = \App\Models\RideReview::with(['ride', 'user', 'ridePurchase'])
-            ->whereHas('ride', function($q) use ($user) {
+            ->whereHas('ride', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
             ->orderBy('created_at', 'desc')
@@ -102,9 +101,9 @@ class DriverProfileController extends Controller
 
         // Get previous rides (completed)
         $previousRides = \App\Models\Ride::where('user_id', $user->id)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('go_completion_status', 'completed')
-                  ->orWhere('return_completion_status', 'completed');
+                    ->orWhere('return_completion_status', 'completed');
             })
             ->orderBy('date', 'desc')
             ->limit(5)
@@ -116,13 +115,14 @@ class DriverProfileController extends Controller
             ->get();
 
         // Filter the rides based on availability
-        $filteredAvailableRides = $availableRides->filter(function($ride) {
+        $filteredAvailableRides = $availableRides->filter(function ($ride) {
             if ($ride->is_exclusive) {
                 // For exclusive rides, check if no bookings exist
                 $hasBookings = \App\Models\RidePurchase::where('ride_id', $ride->id)
                     ->where('trip_type', 'go')
                     ->exists();
-                return !$hasBookings;
+
+                return ! $hasBookings;
             } else {
                 // For shared rides, check if seats are available
                 return $ride->available_seats > 0;
@@ -136,13 +136,14 @@ class DriverProfileController extends Controller
             ->get();
 
         // Filter return rides
-        $filteredReturnRides = $availableReturnRides->filter(function($ride) {
+        $filteredReturnRides = $availableReturnRides->filter(function ($ride) {
             if ($ride->return_is_exclusive) {
                 // For exclusive return rides, check if no bookings exist
                 $hasBookings = \App\Models\RidePurchase::where('ride_id', $ride->id)
                     ->where('trip_type', 'return')
                     ->exists();
-                return !$hasBookings;
+
+                return ! $hasBookings;
             } else {
                 // For shared return rides, check if seats are available
                 return $ride->return_available_seats > 0;
@@ -150,17 +151,17 @@ class DriverProfileController extends Controller
         })->take(5);
 
         return view('driver-profile-public', compact(
-            'user', 
-            'driverDocuments', 
-            'reviews', 
-            'totalReviews', 
-            'averageOverallRating', 
-            'averageDriverRating', 
-            'averageVehicleRating', 
+            'user',
+            'driverDocuments',
+            'reviews',
+            'totalReviews',
+            'averageOverallRating',
+            'averageDriverRating',
+            'averageVehicleRating',
             'ratingDistribution',
             'previousRides',
             'filteredAvailableRides',
             'filteredReturnRides'
         ));
     }
-} 
+}

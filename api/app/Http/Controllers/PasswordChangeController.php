@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class PasswordChangeController extends Controller
 {
@@ -16,7 +16,7 @@ class PasswordChangeController extends Controller
     public function update(Request $request)
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to change your password.');
         }
 
@@ -27,7 +27,7 @@ class PasswordChangeController extends Controller
         ]);
 
         // Check current password
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'Current password is incorrect.'])->withInput();
         }
 
@@ -43,10 +43,10 @@ class PasswordChangeController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to change your password.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
@@ -56,9 +56,9 @@ class PasswordChangeController extends Controller
             'data' => [
                 'form_fields' => [
                     'current_password' => 'required',
-                    'new_password' => 'required|min:8|confirmed'
-                ]
-            ]
+                    'new_password' => 'required|min:8|confirmed',
+                ],
+            ],
         ]);
     }
 
@@ -66,10 +66,10 @@ class PasswordChangeController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to change your password.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
@@ -83,16 +83,16 @@ class PasswordChangeController extends Controller
             return response()->json([
                 'message' => 'Validation failed',
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         // Check current password
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'message' => 'Current password is incorrect.',
                 'status' => 'error',
-                'errors' => ['current_password' => ['Current password is incorrect.']]
+                'errors' => ['current_password' => ['Current password is incorrect.']],
             ], 422);
         }
 
@@ -102,7 +102,7 @@ class PasswordChangeController extends Controller
 
         return response()->json([
             'message' => 'Password changed successfully!',
-            'status' => 'success'
+            'status' => 'success',
         ]);
     }
-} 
+}

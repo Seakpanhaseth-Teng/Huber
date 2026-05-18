@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Ride;
-use App\Models\RidePurchase;
 use App\Models\RideReview;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -16,6 +14,7 @@ class AdminDriverController extends Controller
         $drivers = User::where('role', 'driver')
             ->with(['rides', 'driverDocuments'])
             ->paginate(12);
+
         return view('admin.drivers.index', compact('drivers'));
     }
 
@@ -24,33 +23,33 @@ class AdminDriverController extends Controller
         $driver = User::where('role', 'driver')
             ->with(['rides', 'driverDocuments', 'ridePurchases'])
             ->findOrFail($id);
-        
+
         // Get driver statistics
         $totalRides = $driver->rides()->count();
         $completedRides = $driver->rides()
             ->where('go_completion_status', 'completed')
             ->orWhere('return_completion_status', 'completed')
             ->count();
-        
+
         // Calculate total earnings
         $totalEarnings = $driver->ridePurchases()
             ->where('payment_status', 'paid')
             ->sum('total_price');
-        
+
         // Get recent rides
         $recentRides = $driver->rides()
             ->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
             ->take(5)
             ->get();
-        
+
         // Get average rating
-        $reviews = RideReview::whereHas('ride', function($query) use ($driver) {
+        $reviews = RideReview::whereHas('ride', function ($query) use ($driver) {
             $query->where('user_id', $driver->id);
         })->get();
-        
+
         $averageRating = $reviews->count() > 0 ? $reviews->avg('overall_rating') : 0;
-        
+
         // Get monthly earnings for the last 6 months
         $monthlyEarnings = $driver->ridePurchases()
             ->where('payment_status', 'paid')
@@ -60,13 +59,13 @@ class AdminDriverController extends Controller
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
             ->get();
-        
+
         return view('admin.drivers.show', compact(
-            'driver', 
-            'totalRides', 
-            'completedRides', 
-            'totalEarnings', 
-            'recentRides', 
+            'driver',
+            'totalRides',
+            'completedRides',
+            'totalEarnings',
+            'recentRides',
             'averageRating',
             'monthlyEarnings'
         ));
@@ -91,12 +90,14 @@ class AdminDriverController extends Controller
             'role' => 'driver',
             'is_verified' => false,
         ]);
+
         return redirect()->route('admin.drivers.index')->with('success', 'Driver created successfully');
     }
 
     public function edit($id)
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
+
         return view('admin.drivers.edit', compact('driver'));
     }
 
@@ -114,6 +115,7 @@ class AdminDriverController extends Controller
             $driver->password = Hash::make($request->password);
         }
         $driver->save();
+
         return redirect()->route('admin.drivers.index')->with('success', 'Driver updated successfully');
     }
 
@@ -121,6 +123,7 @@ class AdminDriverController extends Controller
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->delete();
+
         return redirect()->route('admin.drivers.index')->with('success', 'Driver deleted successfully');
     }
-} 
+}

@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Ride;
 use App\Models\RidePurchase;
-use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +15,7 @@ class BookingController extends Controller
         $user = auth()->user();
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
@@ -61,16 +60,16 @@ class BookingController extends Controller
                     [
                         'name' => $user->name,
                         'seat_number' => 1,
-                        'phone' => $user->phone
-                    ]
+                        'phone' => $user->phone,
+                    ],
                 ],
                 'contact_phone' => $user->phone,
-                'special_requests' => ''
+                'special_requests' => '',
             ];
-            
+
             // Store booking data in session
             session(['pending_booking_data' => $bookingData]);
-            
+
             // Redirect to payment controller
             return redirect()->route('payment.show', ['rideId' => $rideId, 'tripType' => $tripType]);
         }
@@ -84,7 +83,7 @@ class BookingController extends Controller
         $user = auth()->user();
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
@@ -123,7 +122,7 @@ class BookingController extends Controller
         $user = auth()->user();
 
         $ride = Ride::find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
@@ -145,7 +144,7 @@ class BookingController extends Controller
         $specialRequests = $request->input('special_requests');
 
         // Ensure selectedSeats is an array
-        if (!is_array($selectedSeats)) {
+        if (! is_array($selectedSeats)) {
             $selectedSeats = [];
         }
 
@@ -168,12 +167,12 @@ class BookingController extends Controller
         }
 
         // Check if enough seats are available
-        if ((int)$numberOfSeats > $availableSeats) {
+        if ((int) $numberOfSeats > $availableSeats) {
             return back()->withErrors(['number_of_seats' => 'Not enough seats available.']);
         }
 
         // Check if selected seats count matches number of seats
-        if (count($selectedSeats) !== (int)$numberOfSeats) {
+        if (count($selectedSeats) !== (int) $numberOfSeats) {
             return back()->withErrors(['selected_seats' => 'Number of selected seats must match the number of seats you want to book.']);
         }
 
@@ -194,22 +193,22 @@ class BookingController extends Controller
             ->toArray();
 
         $conflictingSeats = array_intersect($selectedSeats, $bookedSeats);
-        if (!empty($conflictingSeats)) {
+        if (! empty($conflictingSeats)) {
             return back()->withErrors(['selected_seats' => 'Some selected seats are already booked: ' . implode(', ', $conflictingSeats)]);
         }
 
         // Check if passenger names count matches
-        $passengerNames = array_filter($passengerNames, function($name) {
-            return !empty(trim($name));
+        $passengerNames = array_filter($passengerNames, function ($name) {
+            return ! empty(trim($name));
         });
 
-        if (count($passengerNames) !== (int)$numberOfSeats) {
+        if (count($passengerNames) !== (int) $numberOfSeats) {
             return back()->withErrors(['passenger_names' => 'Number of passenger names must match the number of seats.']);
         }
 
         // Create passenger details array
         $passengerDetails = [];
-        for ($i = 0; $i < (int)$numberOfSeats; $i++) {
+        for ($i = 0; $i < (int) $numberOfSeats; $i++) {
             $passengerDetails[] = [
                 'name' => $passengerNames[$i],
                 'seat_number' => $selectedSeats[$i],
@@ -218,7 +217,7 @@ class BookingController extends Controller
 
         // Store booking data in session for payment page
         $bookingData = [
-            'number_of_seats' => (int)$numberOfSeats,
+            'number_of_seats' => (int) $numberOfSeats,
             'selected_seats' => $selectedSeats,
             'contact_phone' => $contactPhone,
             'passenger_names' => $passengerNames,
@@ -240,7 +239,7 @@ class BookingController extends Controller
         $user = auth()->user();
 
         $ride = Ride::find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
@@ -272,7 +271,7 @@ class BookingController extends Controller
             'numberOfSeatsHidden' => $numberOfSeatsHidden,
             'passengerNames' => $passengerNames,
             'passengerNamesCount' => is_array($passengerNames) ? count($passengerNames) : 'not array',
-            'passengerNamesType' => gettype($passengerNames)
+            'passengerNamesType' => gettype($passengerNames),
         ]);
 
         // Determine price and available seats based on trip type
@@ -310,7 +309,7 @@ class BookingController extends Controller
             $numberOfSeats = $numberOfSeatsHidden ?: $availableSeats;
         } else {
             // For shared rides, validate that number of seats is provided
-            if (!$numberOfSeats) {
+            if (! $numberOfSeats) {
                 return back()->withErrors(['number_of_seats' => 'Number of seats is required for shared rides.']);
             }
         }
@@ -321,22 +320,22 @@ class BookingController extends Controller
         }
 
         // Ensure passenger_names is an array
-        if (!is_array($passengerNames)) {
+        if (! is_array($passengerNames)) {
             return back()->withErrors(['passenger_names' => 'Passenger names must be provided as an array.']);
         }
 
         // Filter out empty passenger names and check count
-        $passengerNames = array_filter($passengerNames, function($name) {
-            return !empty(trim($name));
+        $passengerNames = array_filter($passengerNames, function ($name) {
+            return ! empty(trim($name));
         });
-        
+
         // For exclusive rides, we only need 1 passenger name
         $requiredPassengerCount = $isExclusive ? 1 : $numberOfSeats;
-        
+
         // Check if number of passenger names matches required count
         if (count($passengerNames) !== $requiredPassengerCount) {
             return back()->withErrors([
-                'passenger_names' => "Number of passenger names (" . count($passengerNames) . ") must match required count ({$requiredPassengerCount}). Please fill in all passenger names."
+                'passenger_names' => 'Number of passenger names (' . count($passengerNames) . ") must match required count ({$requiredPassengerCount}). Please fill in all passenger names.",
             ]);
         }
 
@@ -349,7 +348,7 @@ class BookingController extends Controller
 
         // Create passenger details array
         $passengerDetails = [];
-        for ($i = 0; $i < (int)$numberOfSeats; $i++) {
+        for ($i = 0; $i < (int) $numberOfSeats; $i++) {
             $passengerDetails[] = [
                 'name' => $passengerNames[$i],
                 'seat_number' => $i + 1,
@@ -361,8 +360,9 @@ class BookingController extends Controller
 
             // Lock the ride row to prevent concurrent seat overselling
             $ride = Ride::where('id', $rideId)->lockForUpdate()->first();
-            if (!$ride) {
+            if (! $ride) {
                 DB::rollBack();
+
                 return redirect()->route('find.rides')->with('error', 'Ride not found.');
             }
 
@@ -377,8 +377,9 @@ class BookingController extends Controller
                 $time = $ride->time;
             }
 
-            if ($currentAvailableSeats <= 0 || (int)$numberOfSeats > $currentAvailableSeats) {
+            if ($currentAvailableSeats <= 0 || (int) $numberOfSeats > $currentAvailableSeats) {
                 DB::rollBack();
+
                 return redirect()->route('find.rides')->with('error', 'Not enough seats available.');
             }
 
@@ -394,14 +395,14 @@ class BookingController extends Controller
                 'totalPrice' => $totalPrice,
                 'tripType' => $tripType,
                 'selectedSeats' => $passengerDetails,
-                'passengerDetails' => $passengerDetails
+                'passengerDetails' => $passengerDetails,
             ]);
 
             // Create the booking
             $booking = RidePurchase::create([
                 'ride_id' => $rideId,
                 'user_id' => $user->id,
-                'number_of_seats' => (int)$numberOfSeats,
+                'number_of_seats' => (int) $numberOfSeats,
                 'total_price' => $totalPrice,
                 'payment_status' => 'completed',
                 'payment_method' => $request->input('payment_method', 'visa'),
@@ -417,9 +418,9 @@ class BookingController extends Controller
 
             // Decrement available seats atomically
             if ($tripType === 'return' && $ride->is_two_way) {
-                $ride->decrement('return_available_seats', (int)$numberOfSeats);
+                $ride->decrement('return_available_seats', (int) $numberOfSeats);
             } else {
-                $ride->decrement('available_seats', (int)$numberOfSeats);
+                $ride->decrement('available_seats', (int) $numberOfSeats);
             }
 
             DB::commit();
@@ -433,7 +434,7 @@ class BookingController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Booking failed: ' . $e->getMessage());
-            
+
             return back()->withErrors(['general' => 'An error occurred while processing your booking. Please try again.']);
         }
     }
@@ -446,7 +447,7 @@ class BookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('find.rides')->with('error', 'Booking not found.');
         }
 
@@ -461,7 +462,7 @@ class BookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('find.rides')->with('error', 'Booking not found.');
         }
 

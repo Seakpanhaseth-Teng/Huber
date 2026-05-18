@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 class HomeController extends Controller
 {
     public function index()
@@ -21,12 +19,12 @@ class HomeController extends Controller
                 'description' => 'A ride sharing platform connecting drivers and passengers',
                 'features' => [
                     'User Registration',
-                    'Driver Registration', 
+                    'Driver Registration',
                     'Ride Booking',
                     'Payment Processing',
-                    'Profile Management'
-                ]
-            ]
+                    'Profile Management',
+                ],
+            ],
         ]);
     }
-} 
+}

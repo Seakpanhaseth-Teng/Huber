@@ -4,9 +4,7 @@ namespace App\Services;
 
 use App\Models\RidePurchase;
 use App\Models\RideReview;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 
 class ReviewService
 {
@@ -20,9 +18,12 @@ class ReviewService
 
     public function getRideStatus(RidePurchase $booking, string $tripType): string
     {
+        /** @var \App\Models\Ride $ride */
+        $ride = $booking->ride;
+
         return $tripType === 'return'
-            ? $booking->ride->return_completion_status
-            : $booking->ride->go_completion_status;
+            ? $ride->return_completion_status
+            : $ride->go_completion_status;
     }
 
     public function getExistingReview(int $bookingId, string $tripType): ?RideReview

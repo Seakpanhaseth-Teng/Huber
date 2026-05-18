@@ -16,7 +16,7 @@ class DriverStatsService
             'completed_rides' => $driver->rides()
                 ->where(function ($q) {
                     $q->where('go_completion_status', 'completed')
-                      ->orWhere('return_completion_status', 'completed');
+                        ->orWhere('return_completion_status', 'completed');
                 })
                 ->count(),
             'total_earnings' => $driver->ridePurchases()
@@ -53,18 +53,18 @@ class DriverStatsService
         $totalReviews = $reviews->count();
 
         $averageOverallRating = $totalReviews > 0
-            ? RideReview::whereHas('ride', fn($q) => $q->where('user_id', $driver->id))->avg('overall_rating')
+            ? RideReview::whereHas('ride', fn ($q) => $q->where('user_id', $driver->id))->avg('overall_rating')
             : 0;
         $averageDriverRating = $totalReviews > 0
-            ? RideReview::whereHas('ride', fn($q) => $q->where('user_id', $driver->id))->avg('driver_rating')
+            ? RideReview::whereHas('ride', fn ($q) => $q->where('user_id', $driver->id))->avg('driver_rating')
             : 0;
         $averageVehicleRating = $totalReviews > 0
-            ? RideReview::whereHas('ride', fn($q) => $q->where('user_id', $driver->id))->avg('vehicle_rating')
+            ? RideReview::whereHas('ride', fn ($q) => $q->where('user_id', $driver->id))->avg('vehicle_rating')
             : 0;
 
         $ratingDistribution = [];
         for ($i = 1; $i <= 5; $i++) {
-            $ratingDistribution[$i] = RideReview::whereHas('ride', fn($q) => $q->where('user_id', $driver->id))
+            $ratingDistribution[$i] = RideReview::whereHas('ride', fn ($q) => $q->where('user_id', $driver->id))
                 ->where('overall_rating', $i)
                 ->count();
         }
@@ -72,7 +72,7 @@ class DriverStatsService
         $previousRides = Ride::where('user_id', $driver->id)
             ->where(function ($q) {
                 $q->where('go_completion_status', 'completed')
-                  ->orWhere('return_completion_status', 'completed');
+                    ->orWhere('return_completion_status', 'completed');
             })
             ->orderBy('date', 'desc')
             ->limit(5)
@@ -83,8 +83,9 @@ class DriverStatsService
             ->get()
             ->filter(function ($ride) {
                 if ($ride->is_exclusive) {
-                    return !RidePurchase::where('ride_id', $ride->id)->where('trip_type', 'go')->exists();
+                    return ! RidePurchase::where('ride_id', $ride->id)->where('trip_type', 'go')->exists();
                 }
+
                 return $ride->available_seats > 0;
             })
             ->take(10);
@@ -95,8 +96,9 @@ class DriverStatsService
             ->get()
             ->filter(function ($ride) {
                 if ($ride->return_is_exclusive) {
-                    return !RidePurchase::where('ride_id', $ride->id)->where('trip_type', 'return')->exists();
+                    return ! RidePurchase::where('ride_id', $ride->id)->where('trip_type', 'return')->exists();
                 }
+
                 return $ride->return_available_seats > 0;
             })
             ->take(5);

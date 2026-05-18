@@ -33,8 +33,8 @@ return new class extends Migration
                 'date_of_birth',
                 'emergency_contact_name',
                 'emergency_contact_phone',
-                'emergency_contact_relationship'
+                'emergency_contact_relationship',
             ]);
         });
     }
-}; 
+};

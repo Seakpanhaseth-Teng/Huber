@@ -12,11 +12,11 @@ class AdminDriverDocumentController extends Controller
     {
         // Get all drivers who have documents
         $drivers = User::where('role', 'driver')
-                      ->whereHas('driverDocuments')
-                      ->with('driverDocuments')
-                      ->orderBy('created_at', 'desc')
-                      ->paginate(10);
-        
+            ->whereHas('driverDocuments')
+            ->with('driverDocuments')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
         return view('admin.driver_documents.index', compact('drivers'));
     }
 
@@ -24,7 +24,7 @@ class AdminDriverDocumentController extends Controller
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driverDocument = DriverDocument::where('user_id', $driver->id)->first();
-        
+
         return view('admin.driver_documents.show', compact('driver', 'driverDocument'));
     }
 
@@ -32,18 +32,18 @@ class AdminDriverDocumentController extends Controller
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->update(['is_verified' => true]);
-        
+
         return redirect()->route('admin.driver_documents.show', $driver->id)
-                        ->with('success', 'Driver has been verified successfully!');
+            ->with('success', 'Driver has been verified successfully!');
     }
 
     public function unverify($id)
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->update(['is_verified' => false]);
-        
+
         return redirect()->route('admin.driver_documents.show', $driver->id)
-                        ->with('success', 'Driver verification has been revoked.');
+            ->with('success', 'Driver verification has been revoked.');
     }
 
     public function create()
@@ -53,28 +53,31 @@ class AdminDriverDocumentController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'license_number' => 'required',
         ]);
-        DriverDocument::create($request->validated());
+        DriverDocument::create($validated);
+
         return redirect()->route('admin.driver_documents.index')->with('success', 'Driver document created successfully');
     }
 
     public function edit($id)
     {
         $document = DriverDocument::findOrFail($id);
+
         return view('admin.driver_documents.edit', compact('document'));
     }
 
     public function update(Request $request, $id)
     {
         $document = DriverDocument::findOrFail($id);
-        $request->validate([
+        $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'license_number' => 'required',
         ]);
-        $document->update($request->validated());
+        $document->update($validated);
+
         return redirect()->route('admin.driver_documents.index')->with('success', 'Driver document updated successfully');
     }
 
@@ -82,6 +85,7 @@ class AdminDriverDocumentController extends Controller
     {
         $document = DriverDocument::findOrFail($id);
         $document->delete();
+
         return redirect()->route('admin.driver_documents.index')->with('success', 'Driver document deleted successfully');
     }
-} 
+}

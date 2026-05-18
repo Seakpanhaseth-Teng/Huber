@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RideReview extends Model
 {
@@ -33,17 +34,17 @@ class RideReview extends Model
         'comfort_rating' => 'integer',
     ];
 
-    public function ride()
+    public function ride(): BelongsTo
     {
         return $this->belongsTo(Ride::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function ridePurchase()
+    public function ridePurchase(): BelongsTo
     {
         return $this->belongsTo(RidePurchase::class);
     }
@@ -56,9 +57,9 @@ class RideReview extends Model
             $this->vehicle_rating,
             $this->punctuality_rating,
             $this->safety_rating,
-            $this->comfort_rating
+            $this->comfort_rating,
         ];
-        
+
         return round(array_sum($ratings) / count($ratings), 1);
     }
 
@@ -67,7 +68,7 @@ class RideReview extends Model
     {
         $rating = $this->overall_rating;
         $stars = '';
-        
+
         for ($i = 1; $i <= 5; $i++) {
             if ($i <= $rating) {
                 $stars .= '★';
@@ -75,7 +76,7 @@ class RideReview extends Model
                 $stars .= '☆';
             }
         }
-        
+
         return $stars;
     }
 }

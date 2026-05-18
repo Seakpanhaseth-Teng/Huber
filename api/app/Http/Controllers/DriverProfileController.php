@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DriverDocument;
+use App\Models\User;
+use App\Services\DriverStatsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use App\Models\DriverDocument;
-use App\Services\DriverStatsService;
 
 class DriverProfileController extends Controller
 {
@@ -21,7 +20,9 @@ class DriverProfileController extends Controller
     public function show()
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $driverDocuments = DriverDocument::where('user_id', $user->id)->first();
 
@@ -31,7 +32,9 @@ class DriverProfileController extends Controller
     public function updateVehiclePhotos(Request $request)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $request->validate([
             'vehicle_photo_1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -40,7 +43,7 @@ class DriverProfileController extends Controller
         ]);
 
         $driverDocuments = DriverDocument::where('user_id', $user->id)->first();
-        if (!$driverDocuments) {
+        if (! $driverDocuments) {
             return redirect()->back()->with('error', 'Driver documents not found.');
         }
 
@@ -48,6 +51,7 @@ class DriverProfileController extends Controller
 
         if ($updated) {
             $driverDocuments->save();
+
             return redirect()->back()->with('success', 'Vehicle photos updated successfully.');
         }
 
@@ -66,6 +70,7 @@ class DriverProfileController extends Controller
                 $updated = true;
             }
         }
+
         return $updated;
     }
 
@@ -97,7 +102,9 @@ class DriverProfileController extends Controller
     public function apiShow(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to access your driver profile.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to access your driver profile.', 401);
+        }
 
         $driverDocuments = DriverDocument::where('user_id', $user->id)->first();
 
@@ -110,7 +117,9 @@ class DriverProfileController extends Controller
     public function apiUpdateVehiclePhotos(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to update vehicle photos.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to update vehicle photos.', 401);
+        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'vehicle_photo_1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -123,7 +132,7 @@ class DriverProfileController extends Controller
         }
 
         $driverDocuments = DriverDocument::where('user_id', $user->id)->first();
-        if (!$driverDocuments) {
+        if (! $driverDocuments) {
             return $this->jsonError('Driver documents not found.', 404);
         }
 
@@ -131,6 +140,7 @@ class DriverProfileController extends Controller
 
         if ($updated) {
             $driverDocuments->save();
+
             return $this->jsonSuccess('Vehicle photos updated successfully.', [
                 'driver_documents' => $driverDocuments,
             ]);
@@ -142,7 +152,9 @@ class DriverProfileController extends Controller
     public function apiShowPublic(Request $request, $driverId)
     {
         $user = User::where('id', $driverId)->where('role', 'driver')->first();
-        if (!$user) return $this->jsonError('Driver not found.', 404);
+        if (! $user) {
+            return $this->jsonError('Driver not found.', 404);
+        }
 
         $driverDocuments = DriverDocument::where('user_id', $user->id)->first();
         $stats = $this->driverStatsService->getPublicProfileStats($user);

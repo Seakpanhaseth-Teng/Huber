@@ -16,12 +16,12 @@ class CheckDriverVerification
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return redirect()->route('login');
         }
 
-        if ($user->role === 'driver' && !$user->is_verified) {
+        if ($user->role === 'driver' && ! $user->is_verified) {
             return redirect()->route('driver.verification.pending');
         }
 

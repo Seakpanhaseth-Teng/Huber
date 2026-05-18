@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Models\RideReview;
-use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class RideCompletionController extends Controller
@@ -22,7 +21,7 @@ class RideCompletionController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.ride.management')->with('error', 'Ride not found or access denied.');
         }
 
@@ -44,6 +43,7 @@ class RideCompletionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to mark ride as ongoing. Please try again.');
         }
     }
@@ -59,7 +59,7 @@ class RideCompletionController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.ride.management')->with('error', 'Ride not found or access denied.');
         }
 
@@ -83,6 +83,7 @@ class RideCompletionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to mark ride as completed. Please try again.');
         }
     }
@@ -99,17 +100,17 @@ class RideCompletionController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 
         // Check if ride is completed (only allow reviews for completed rides)
         $rideStatus = $tripType === 'return' ? $booking->ride->return_completion_status : $booking->ride->go_completion_status;
-        
+
         if ($rideStatus === 'pending') {
             return redirect()->route('user.bookings')->with('error', 'This ride has not started yet. You can review once the ride is completed.');
         }
-        
+
         if ($rideStatus === 'ongoing') {
             return redirect()->route('user.bookings')->with('error', 'This ride is currently ongoing. You can review once the driver marks it as completed.');
         }
@@ -138,7 +139,7 @@ class RideCompletionController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 
@@ -186,6 +187,7 @@ class RideCompletionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to submit review. Please try again.');
         }
     }
@@ -202,7 +204,7 @@ class RideCompletionController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.ride.management')->with('error', 'Ride not found or access denied.');
         }
 
@@ -218,7 +220,7 @@ class RideCompletionController extends Controller
 
         // Get all reviews for rides owned by this driver
         $reviews = RideReview::with(['ride', 'user', 'ridePurchase'])
-            ->whereHas('ride', function($q) use ($user) {
+            ->whereHas('ride', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
             ->orderBy('created_at', 'desc')

@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Ride;
 use App\Models\RidePurchase;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Services\BookingService;
 use App\Services\RidePricingService;
 use App\Services\SeatAvailabilityService;
-use App\Services\BookingService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
     protected $ridePricingService;
+
     protected $seatAvailabilityService;
+
     protected $bookingService;
 
     public function __construct()
@@ -28,10 +28,12 @@ class BookingController extends Controller
     public function showPaymentPage(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
@@ -53,6 +55,7 @@ class BookingController extends Controller
                 'special_requests' => '',
             ];
             session(['pending_booking_data' => $bookingData]);
+
             return redirect()->route('payment.show', ['rideId' => $rideId, 'tripType' => $tripType]);
         }
 
@@ -62,10 +65,12 @@ class BookingController extends Controller
     public function showSeatSelection($rideId, $tripType = 'go')
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
@@ -77,7 +82,9 @@ class BookingController extends Controller
 
         $bookedSeats = $this->seatAvailabilityService->getBookedSeatsSql($rideId, $tripType);
 
-        return view('booking.seat-selection', compact('ride', 'user', 'tripType', 'pricing', 'bookedSeats'))
+        /** @phpstan-var view-string $view */
+        $view = 'booking.seat-selection';
+        return view($view, compact('ride', 'user', 'tripType', 'pricing', 'bookedSeats'))
             ->with('availableSeats', $pricing['available_seats'])
             ->with('date', $pricing['date'])
             ->with('time', $pricing['time'])
@@ -87,10 +94,12 @@ class BookingController extends Controller
     public function processSeatSelection(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::find($rideId);
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
@@ -131,11 +140,11 @@ class BookingController extends Controller
         }
 
         $conflictingSeats = $this->seatAvailabilityService->getConflictingSeats($rideId, $tripType, $selectedSeats);
-        if (!empty($conflictingSeats)) {
+        if (! empty($conflictingSeats)) {
             return back()->withErrors(['selected_seats' => 'Some selected seats are already booked: ' . implode(', ', $conflictingSeats)]);
         }
 
-        $passengerNames = array_filter($passengerNames, fn($name) => !empty(trim($name)));
+        $passengerNames = array_filter($passengerNames, fn ($name) => ! empty(trim($name)));
         if (count($passengerNames) !== $numberOfSeats) {
             return back()->withErrors(['passenger_names' => 'Number of passenger names must match the number of seats.']);
         }
@@ -166,10 +175,12 @@ class BookingController extends Controller
     public function processBooking(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::where('id', $rideId)->lockForUpdate()->first();
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
 
@@ -208,7 +219,7 @@ class BookingController extends Controller
 
         if ($pricing['is_exclusive']) {
             $numberOfSeats = $numberOfSeatsHidden ?: $pricing['available_seats'];
-        } elseif (!$numberOfSeats) {
+        } elseif (! $numberOfSeats) {
             return back()->withErrors(['number_of_seats' => 'Number of seats is required for shared rides.']);
         }
 
@@ -216,16 +227,16 @@ class BookingController extends Controller
             return back()->withErrors(['number_of_seats' => 'Not enough seats available.']);
         }
 
-        if (!is_array($passengerNames)) {
+        if (! is_array($passengerNames)) {
             return back()->withErrors(['passenger_names' => 'Passenger names must be provided as an array.']);
         }
 
-        $passengerNames = array_filter($passengerNames, fn($name) => !empty(trim($name)));
+        $passengerNames = array_filter($passengerNames, fn ($name) => ! empty(trim($name)));
         $requiredPassengerCount = $pricing['is_exclusive'] ? 1 : $numberOfSeats;
 
         if (count($passengerNames) !== $requiredPassengerCount) {
             return back()->withErrors([
-                'passenger_names' => "Number of passenger names (" . count($passengerNames) . ") must match required count ({$requiredPassengerCount}). Please fill in all passenger names.",
+                'passenger_names' => 'Number of passenger names (' . count($passengerNames) . ") must match required count ({$requiredPassengerCount}). Please fill in all passenger names.",
             ]);
         }
 
@@ -247,10 +258,12 @@ class BookingController extends Controller
             );
 
             session(['last_booking_id' => $booking->id]);
+
             return redirect()->route('booking.thank-you', $booking->id)
                 ->with('success', 'Booking completed successfully!');
         } catch (\Exception $e) {
             Log::error('Booking failed: ' . $e->getMessage());
+
             return back()->withErrors(['general' => 'An error occurred while processing your booking. Please try again.']);
         }
     }
@@ -258,7 +271,7 @@ class BookingController extends Controller
     public function showThankYou($bookingId)
     {
         $user = $this->getWebUser();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to view booking confirmation.');
         }
 
@@ -267,17 +280,19 @@ class BookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('find.rides')->with('error', 'Booking not found.');
         }
 
-        return view('booking.thank-you', compact('booking', 'user'));
+        /** @phpstan-var view-string $view */
+        $view = 'booking.thank-you';
+        return view($view, compact('booking', 'user'));
     }
 
     public function showConfirmation($bookingId)
     {
         $user = $this->getWebUser();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to view booking confirmation.');
         }
 
@@ -286,18 +301,22 @@ class BookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 
-        return view('booking.confirmation', compact('booking'));
+        /** @phpstan-var view-string $view */
+        $view = 'booking.confirmation';
+        return view($view, compact('booking'));
     }
 
     // API Methods
     public function apiFindRides(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to find rides.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to find rides.', 401);
+        }
 
         try {
             $rides = Ride::with('user')
@@ -316,10 +335,14 @@ class BookingController extends Controller
     public function apiShowPaymentPage(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to book a ride.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to book a ride.', 401);
+        }
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) return $this->jsonError('Ride not found.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found.', 404);
+        }
 
         $pricing = $this->ridePricingService->getPricing($ride, $tripType);
 
@@ -342,10 +365,14 @@ class BookingController extends Controller
     public function apiShowSeatSelection($rideId, $tripType = 'go')
     {
         $user = request()->user();
-        if (!$user) return $this->jsonError('Please login to book a ride.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to book a ride.', 401);
+        }
 
         $ride = Ride::with('user')->find($rideId);
-        if (!$ride) return $this->jsonError('Ride not found.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found.', 404);
+        }
 
         $pricing = $this->ridePricingService->getPricingSimple($ride, $tripType);
 
@@ -370,10 +397,14 @@ class BookingController extends Controller
     public function apiProcessSeatSelection(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to book a ride.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to book a ride.', 401);
+        }
 
         $ride = Ride::find($rideId);
-        if (!$ride) return $this->jsonError('Ride not found.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found.', 404);
+        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'number_of_seats' => 'required|integer|min:1',
@@ -407,7 +438,7 @@ class BookingController extends Controller
 
         // Check seat conflicts (added to API to match web behavior)
         $conflictingSeats = $this->seatAvailabilityService->getConflictingSeats($rideId, $tripType, $selectedSeats);
-        if (!empty($conflictingSeats)) {
+        if (! empty($conflictingSeats)) {
             return $this->jsonError('Some selected seats are already booked: ' . implode(', ', $conflictingSeats), 400);
         }
 
@@ -415,7 +446,7 @@ class BookingController extends Controller
             'number_of_seats' => $numberOfSeats,
             'selected_seats' => $selectedSeats,
             'passenger_names' => $passengerNames,
-            'passenger_details' => array_map(fn($name, $seat) => [
+            'passenger_details' => array_map(fn ($name, $seat) => [
                 'name' => $name, 'seat_number' => $seat,
             ], $passengerNames, $selectedSeats),
             'contact_phone' => $contactPhone,
@@ -433,10 +464,14 @@ class BookingController extends Controller
     public function apiProcessBooking(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to book a ride.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to book a ride.', 401);
+        }
 
         $ride = Ride::where('id', $rideId)->lockForUpdate()->first();
-        if (!$ride) return $this->jsonError('Ride not found.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found.', 404);
+        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'booking_data' => 'required|array',
@@ -461,7 +496,7 @@ class BookingController extends Controller
 
         $totalPrice = $this->ridePricingService->calculateTotalPrice($ride, $tripType, $numberOfSeats);
 
-        $passengerDetails = array_map(fn($name, $seat) => [
+        $passengerDetails = array_map(fn ($name, $seat) => [
             'name' => $name, 'seat_number' => $seat,
         ], $bookingData['passenger_names'], $bookingData['selected_seats']);
 
@@ -486,10 +521,12 @@ class BookingController extends Controller
     public function apiShowThankYou($bookingId)
     {
         $user = request()->user();
-        if (!$user) return $this->jsonError('Please login to view booking details.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to view booking details.', 401);
+        }
 
         $booking = RidePurchase::with('ride.user')->find($bookingId);
-        if (!$booking || $booking->user_id !== $user->id) {
+        if (! $booking || $booking->user_id !== $user->id) {
             return $this->jsonError('Booking not found.', 404);
         }
 
@@ -502,10 +539,12 @@ class BookingController extends Controller
     public function apiShowConfirmation($bookingId)
     {
         $user = request()->user();
-        if (!$user) return $this->jsonError('Please login to view booking details.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to view booking details.', 401);
+        }
 
         $booking = RidePurchase::with('ride.user')->find($bookingId);
-        if (!$booking || $booking->user_id !== $user->id) {
+        if (! $booking || $booking->user_id !== $user->id) {
             return $this->jsonError('Booking not found.', 404);
         }
 

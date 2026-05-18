@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -19,6 +19,7 @@ class LoginController extends Controller
         $user = User::where('email', $credentials['email'])->first();
         if ($user && Hash::check($credentials['password'], $user->password)) {
             Auth::login($user);
+
             return redirect()->route('user.profile'); // Redirect to profile page
         }
 
@@ -36,7 +37,7 @@ class LoginController extends Controller
         if ($user && Hash::check($credentials['password'], $user->password)) {
             // Create token for API access
             $token = $user->createToken('auth_token')->plainTextToken;
-            
+
             return response()->json([
                 'success' => true,
                 'token' => $token,
@@ -44,9 +45,10 @@ class LoginController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                ]
+                ],
             ]);
         }
+
         return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
     }
 
@@ -55,6 +57,7 @@ class LoginController extends Controller
         if ($request->user()) {
             $request->user()->currentAccessToken()->delete();
         }
+
         return response()->json(['success' => true, 'message' => 'Logged out successfully.']);
     }
-} 
+}

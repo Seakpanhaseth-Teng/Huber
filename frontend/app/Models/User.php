@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -21,7 +22,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name', 'email', 'phone', 'password', 'role', 'is_verified',
         'license_number', 'license_expiry', 'vehicle_model', 'vehicle_year', 'vehicle_color', 'license_plate', 'vehicle_seats',
-        'profile_picture', 'address', 'date_of_birth', 'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship'
+        'profile_picture', 'address', 'date_of_birth', 'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
     ];
 
     /**
@@ -49,17 +50,17 @@ class User extends Authenticatable
         ];
     }
 
-    public function driverDocuments()
+    public function driverDocuments(): HasOne
     {
         return $this->hasOne(DriverDocument::class);
     }
 
-    public function rides()
+    public function rides(): HasMany
     {
         return $this->hasMany(Ride::class);
     }
 
-    public function ridePurchases()
+    public function ridePurchases(): HasMany
     {
         return $this->hasMany(RidePurchase::class);
     }

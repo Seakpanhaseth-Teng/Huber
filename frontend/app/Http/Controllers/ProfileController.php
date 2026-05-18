@@ -2,28 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
     public function show()
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         // Split name into first and last name
         $nameParts = explode(' ', $user->name, 2);
-        $user->first_name = $nameParts[0] ?? '';
-        $user->last_name = $nameParts[1] ?? '';
+        $firstName = $nameParts[0];
+        $lastName = $nameParts[1] ?? '';
 
-        return view('profile', compact('user'));
+        return view('profile', compact('user', 'firstName', 'lastName'));
     }
 
     public function update(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         // Validation rules
@@ -47,7 +48,7 @@ class ProfileController extends Controller
         ];
 
         // Add driver-specific validation if user is a driver
-        if (auth()->user()->role === 'driver') {
+        if ($user->role === 'driver') {
             $driverRules = [
                 'license_number' => 'required|string|max:255',
                 'license_expiry' => 'required|date|after:today',
@@ -73,7 +74,7 @@ class ProfileController extends Controller
                 if ($user->profile_picture) {
                     Storage::disk('public')->delete($user->profile_picture);
                 }
-                
+
                 // Store new profile picture
                 $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
                 $user->profile_picture = $profilePicturePath;
@@ -90,7 +91,7 @@ class ProfileController extends Controller
             $user->emergency_contact_relationship = $request->emergency_contact_relationship;
 
             // Update driver information if applicable
-            if (auth()->user()->role === 'driver') {
+            if ($user->role === 'driver') {
                 $user->license_number = $request->license_number;
                 $user->license_expiry = $request->license_expiry;
                 $user->vehicle_model = $request->vehicle_model;
@@ -108,4 +109,4 @@ class ProfileController extends Controller
             return back()->with('error', 'An error occurred while updating your profile. Please try again.');
         }
     }
-} 
+}

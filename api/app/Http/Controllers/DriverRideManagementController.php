@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Services\RidePricingService;
 use App\Services\RideValidationService;
+use Illuminate\Http\Request;
 
 class DriverRideManagementController extends Controller
 {
     protected $ridePricingService;
+
     protected $rideValidationService;
 
     public function __construct()
@@ -23,7 +23,9 @@ class DriverRideManagementController extends Controller
     public function index(Request $request)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $allRides = Ride::where('user_id', $user->id)
             ->orderBy('date', 'desc')
@@ -40,20 +42,29 @@ class DriverRideManagementController extends Controller
             }
         }
 
-        return view('ride-management.index', compact('user', 'goRides', 'returnRides'));
+        /** @phpstan-var view-string $view */
+        $view = 'ride-management.index';
+        return view($view, compact('user', 'goRides', 'returnRides'));
     }
 
     public function create()
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
-        return view('ride-management.create', compact('user'));
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
+
+        /** @phpstan-var view-string $view */
+        $view = 'ride-management.create';
+        return view($view, compact('user'));
     }
 
     public function store(Request $request)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $validated = $request->validate($this->rideValidationService->rideRules());
 
@@ -71,30 +82,41 @@ class DriverRideManagementController extends Controller
     public function myRides(Request $request)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
-        return view('ride-management.my-rides', compact('user'));
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
+
+        /** @phpstan-var view-string $view */
+        $view = 'ride-management.my-rides';
+        return view($view, compact('user'));
     }
 
     public function edit($rideId)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.my-rides')->with('error', 'Ride not found or access denied.');
         }
 
-        return view('ride-management.edit', compact('user', 'ride'));
+        /** @phpstan-var view-string $view */
+        $view = 'ride-management.edit';
+        return view($view, compact('user', 'ride'));
     }
 
     public function update(Request $request, $rideId)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.my-rides')->with('error', 'Ride not found or access denied.');
         }
 
@@ -144,6 +166,7 @@ class DriverRideManagementController extends Controller
         }
 
         $ride->update($validated);
+
         return redirect()->route('driver.my-rides')->with('success', 'Ride updated successfully!');
     }
 
@@ -155,7 +178,7 @@ class DriverRideManagementController extends Controller
 
         $query->where(function ($q) {
             $q->where('go_completion_status', 'pending')
-              ->orWhere('return_completion_status', 'pending');
+                ->orWhere('return_completion_status', 'pending');
         });
 
         if ($request->filled('date')) {
@@ -165,18 +188,18 @@ class DriverRideManagementController extends Controller
             $min = $request->input('price_min');
             $query->where(function ($q) use ($min) {
                 $q->where('go_to_price_per_person', '>=', $min)
-                  ->orWhere('go_to_exclusive_price', '>=', $min)
-                  ->orWhere('return_price_per_person', '>=', $min)
-                  ->orWhere('return_exclusive_price', '>=', $min);
+                    ->orWhere('go_to_exclusive_price', '>=', $min)
+                    ->orWhere('return_price_per_person', '>=', $min)
+                    ->orWhere('return_exclusive_price', '>=', $min);
             });
         }
         if ($request->filled('price_max')) {
             $max = $request->input('price_max');
             $query->where(function ($q) use ($max) {
                 $q->where('go_to_price_per_person', '<=', $max)
-                  ->orWhere('go_to_exclusive_price', '<=', $max)
-                  ->orWhere('return_price_per_person', '<=', $max)
-                  ->orWhere('return_exclusive_price', '<=', $max);
+                    ->orWhere('go_to_exclusive_price', '<=', $max)
+                    ->orWhere('return_price_per_person', '<=', $max)
+                    ->orWhere('return_exclusive_price', '<=', $max);
             });
         }
         if ($request->filled('departure_time')) {
@@ -222,7 +245,7 @@ class DriverRideManagementController extends Controller
             $isGoAvailable = false;
             if ($ride->go_completion_status === 'pending') {
                 if ($ride->is_exclusive) {
-                    $isGoAvailable = !RidePurchase::where('ride_id', $ride->id)
+                    $isGoAvailable = ! RidePurchase::where('ride_id', $ride->id)
                         ->where('trip_type', 'go')->exists();
                 } else {
                     $isGoAvailable = $ride->available_seats > 0;
@@ -254,7 +277,7 @@ class DriverRideManagementController extends Controller
             $isReturnAvailable = false;
             if ($ride->is_two_way && $ride->return_date && $ride->return_time && $ride->return_completion_status === 'pending') {
                 if ($ride->return_is_exclusive) {
-                    $isReturnAvailable = !RidePurchase::where('ride_id', $ride->id)
+                    $isReturnAvailable = ! RidePurchase::where('ride_id', $ride->id)
                         ->where('trip_type', 'return')->exists();
                 } else {
                     $isReturnAvailable = $ride->return_available_seats > 0;
@@ -286,18 +309,21 @@ class DriverRideManagementController extends Controller
 
         if ($request->filled('price_min')) {
             $min = (float) $request->input('price_min');
-            $rideEntries = array_filter($rideEntries, fn($e) => isset($e['price_per_person']) && $e['price_per_person'] >= $min);
+            $rideEntries = array_filter($rideEntries, fn ($e) => isset($e['price_per_person']) && $e['price_per_person'] >= $min);
         }
         if ($request->filled('price_max')) {
             $max = (float) $request->input('price_max');
-            $rideEntries = array_filter($rideEntries, fn($e) => isset($e['price_per_person']) && $e['price_per_person'] <= $max);
+            $rideEntries = array_filter($rideEntries, fn ($e) => isset($e['price_per_person']) && $e['price_per_person'] <= $max);
         }
 
         if (in_array($request->input('sort_by'), ['price_asc', 'price_desc'])) {
             usort($rideEntries, function ($a, $b) use ($request) {
                 $aPrice = $a['price_per_person'] ?? 0;
                 $bPrice = $b['price_per_person'] ?? 0;
-                if ($aPrice == $bPrice) return 0;
+                if ($aPrice == $bPrice) {
+                    return 0;
+                }
+
                 return $request->input('sort_by') === 'price_asc' ? $aPrice <=> $bPrice : $bPrice <=> $aPrice;
             });
         }
@@ -312,10 +338,12 @@ class DriverRideManagementController extends Controller
     public function earnings(Request $request)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $bookings = RidePurchase::with(['ride', 'user'])
-            ->whereHas('ride', fn($q) => $q->where('user_id', $user->id))
+            ->whereHas('ride', fn ($q) => $q->where('user_id', $user->id))
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -325,26 +353,34 @@ class DriverRideManagementController extends Controller
         $completedRides = Ride::where('user_id', $user->id)
             ->where(function ($q) {
                 $q->where('go_completion_status', 'completed')
-                  ->orWhere('return_completion_status', 'completed');
+                    ->orWhere('return_completion_status', 'completed');
             })
             ->get();
 
         $totalRidesCompleted = 0;
         foreach ($completedRides as $ride) {
-            if ($ride->go_completion_status === 'completed') $totalRidesCompleted++;
-            if ($ride->return_completion_status === 'completed') $totalRidesCompleted++;
+            if ($ride->go_completion_status === 'completed') {
+                $totalRidesCompleted++;
+            }
+            if ($ride->return_completion_status === 'completed') {
+                $totalRidesCompleted++;
+            }
         }
 
-        return view('ride-management.earnings', compact('user', 'bookings', 'totalEarnings', 'totalCustomers', 'totalRidesCompleted'));
+        /** @phpstan-var view-string $view */
+        $view = 'ride-management.earnings';
+        return view($view, compact('user', 'bookings', 'totalEarnings', 'totalCustomers', 'totalRidesCompleted'));
     }
 
     public function showRideCustomers($rideId, $tripType = null)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.ride.management')->with('error', 'Ride not found or you do not have permission to view it.');
         }
 
@@ -356,7 +392,9 @@ class DriverRideManagementController extends Controller
 
         $seatInfo = $this->calculateSeatInfo($ride, $tripType, $bookings);
 
-        return view('ride-management.ride-customers', compact('user', 'ride', 'bookings', 'tripType', 'seatInfo'));
+        /** @phpstan-var view-string $view */
+        $view = 'ride-management.ride-customers';
+        return view($view, compact('user', 'ride', 'bookings', 'tripType', 'seatInfo'));
     }
 
     private function calculateSeatInfo($ride, $tripType, $bookings)
@@ -417,7 +455,9 @@ class DriverRideManagementController extends Controller
     public function apiIndex(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to access ride management.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to access ride management.', 401);
+        }
 
         $allRides = Ride::where('user_id', $user->id)
             ->orderBy('date', 'desc')
@@ -444,7 +484,9 @@ class DriverRideManagementController extends Controller
     public function apiCreate(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to create a ride.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to create a ride.', 401);
+        }
 
         return $this->jsonSuccess('Ride creation form data retrieved successfully', [
             'user' => $user,
@@ -477,7 +519,9 @@ class DriverRideManagementController extends Controller
     public function apiStore(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to create a ride.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to create a ride.', 401);
+        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $this->rideValidationService->rideRules());
         if ($validator->fails()) {
@@ -487,10 +531,14 @@ class DriverRideManagementController extends Controller
         $validated = $validator->validated();
 
         $errors = $this->rideValidationService->validateApiRidePricing($request, $validated);
-        if ($errors) return $this->jsonError('Validation failed', 422, $errors);
+        if ($errors) {
+            return $this->jsonError('Validation failed', 422, $errors);
+        }
 
         $errors = $this->rideValidationService->validateApiReturnPricing($request, $validated);
-        if ($errors) return $this->jsonError('Validation failed', 422, $errors);
+        if ($errors) {
+            return $this->jsonError('Validation failed', 422, $errors);
+        }
 
         $validated['return_destination'] = $validated['station_location'];
         $ride = new Ride($validated);
@@ -503,7 +551,9 @@ class DriverRideManagementController extends Controller
     public function apiMyRides(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to view your rides.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to view your rides.', 401);
+        }
 
         $rides = Ride::where('user_id', $user->id)
             ->orderBy('date', 'desc')
@@ -516,10 +566,14 @@ class DriverRideManagementController extends Controller
     public function apiEdit(Request $request, $rideId)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to edit a ride.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to edit a ride.', 401);
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) return $this->jsonError('Ride not found.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found.', 404);
+        }
 
         return $this->jsonSuccess('Ride edit form data retrieved successfully', [
             'user' => $user,
@@ -530,10 +584,14 @@ class DriverRideManagementController extends Controller
     public function apiUpdate(Request $request, $rideId)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to update a ride.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to update a ride.', 401);
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) return $this->jsonError('Ride not found.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found.', 404);
+        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $this->rideValidationService->rideRules());
         if ($validator->fails()) {
@@ -543,10 +601,14 @@ class DriverRideManagementController extends Controller
         $validated = $validator->validated();
 
         $errors = $this->rideValidationService->validateApiRidePricing($request, $validated);
-        if ($errors) return $this->jsonError('Validation failed', 422, $errors);
+        if ($errors) {
+            return $this->jsonError('Validation failed', 422, $errors);
+        }
 
         $errors = $this->rideValidationService->validateApiReturnPricing($request, $validated);
-        if ($errors) return $this->jsonError('Validation failed', 422, $errors);
+        if ($errors) {
+            return $this->jsonError('Validation failed', 422, $errors);
+        }
 
         $validated['return_destination'] = $validated['station_location'];
         $ride->update($validated);
@@ -557,7 +619,9 @@ class DriverRideManagementController extends Controller
     public function apiFindRides(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to find rides.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to find rides.', 401);
+        }
 
         $rides = Ride::with('user')
             ->where('status', 'active')
@@ -572,15 +636,17 @@ class DriverRideManagementController extends Controller
     public function apiEarnings(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to view earnings.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to view earnings.', 401);
+        }
 
         $bookings = RidePurchase::with(['ride', 'user'])
-            ->whereHas('ride', fn($q) => $q->where('user_id', $user->id))
+            ->whereHas('ride', fn ($q) => $q->where('user_id', $user->id))
             ->where('payment_status', 'completed')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        $totalEarnings = RidePurchase::whereHas('ride', fn($q) => $q->where('user_id', $user->id))
+        $totalEarnings = RidePurchase::whereHas('ride', fn ($q) => $q->where('user_id', $user->id))
             ->where('payment_status', 'completed')
             ->sum('total_price');
 
@@ -600,10 +666,14 @@ class DriverRideManagementController extends Controller
     public function apiShowRideCustomers(Request $request, $rideId, $tripType = null)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to view ride customers.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to view ride customers.', 401);
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) return $this->jsonError('Ride not found.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found.', 404);
+        }
 
         $query = RidePurchase::with('user')
             ->where('ride_id', $rideId)

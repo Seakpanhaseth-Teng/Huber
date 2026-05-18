@@ -11,7 +11,7 @@ class Authenticate
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->with('error', 'Please login to access this page.');
         }
 

@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\RidePurchase;
 
 class UserBookingController extends Controller
@@ -29,11 +27,13 @@ class UserBookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 
-        return view('user.booking-details', compact('booking', 'user'));
+        /** @phpstan-var view-string $view */
+        $view = 'user.booking-details';
+        return view($view, compact('booking', 'user'));
     }
 
     public function printReceipt($bookingId)
@@ -45,7 +45,7 @@ class UserBookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 

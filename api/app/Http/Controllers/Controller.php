@@ -25,27 +25,30 @@ abstract class Controller extends BaseController
 
     protected function webRedirect(\Illuminate\Http\RedirectResponse $response, ?User $user): \Illuminate\Http\RedirectResponse
     {
-        if (!$user) {
+        if (! $user) {
             return $this->webRedirectLogin();
         }
+
         return $response;
     }
 
     protected function jsonSuccess(string $message, $data = null, int $code = 200): \Illuminate\Http\JsonResponse
     {
         $response = ['message' => $message, 'status' => 'success'];
-        if (!is_null($data)) {
+        if (! is_null($data)) {
             $response['data'] = $data;
         }
+
         return response()->json($response, $code);
     }
 
     protected function jsonError(string $message, int $code = 400, $errors = null): \Illuminate\Http\JsonResponse
     {
         $response = ['message' => $message, 'status' => 'error'];
-        if (!is_null($errors)) {
+        if (! is_null($errors)) {
             $response['errors'] = $errors;
         }
+
         return response()->json($response, $code);
     }
 

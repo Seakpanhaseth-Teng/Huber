@@ -1,19 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PasswordChangeController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DriverProfileController;
 use App\Http\Controllers\DriverRideManagementController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\UserBookingController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PasswordChangeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RideCompletionController;
-
+use App\Http\Controllers\UserBookingController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,66 +48,68 @@ Route::get('/register/driver-docs', function () {
 // Authenticated routes
 Route::middleware('auth')->group(function () {
 
-// Profile management routes
-Route::get('/profile', [ProfileController::class, 'show'])->name('user.profile');
-Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Profile management routes
+    Route::get('/profile', [ProfileController::class, 'show'])->name('user.profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-// Driver-specific routes
-Route::get('/driver/profile', [DriverProfileController::class, 'show'])->name('driver.profile');
-Route::put('/driver/vehicle-photos', [DriverProfileController::class, 'updateVehiclePhotos'])->name('driver.vehicle-photos.update');
-Route::get('/driver/profile/{driverId}', [\App\Http\Controllers\DriverProfileController::class, 'showPublic'])->name('driver.profile.public');
-Route::get('/driver/verification-pending', function () {
-    return view('driver-verification-pending');
-})->name('driver.verification.pending');
+    // Driver-specific routes
+    Route::get('/driver/profile', [DriverProfileController::class, 'show'])->name('driver.profile');
+    Route::put('/driver/vehicle-photos', [DriverProfileController::class, 'updateVehiclePhotos'])->name('driver.vehicle-photos.update');
+    Route::get('/driver/profile/{driverId}', [\App\Http\Controllers\DriverProfileController::class, 'showPublic'])->name('driver.profile.public');
+    Route::get('/driver/verification-pending', function () {
+        return view('driver-verification-pending');
+    })->name('driver.verification.pending');
 
-// Ride Management for drivers (only verified drivers)
-Route::middleware('driver.verified')->group(function () {
-    Route::get('/driver/ride-management', [DriverRideManagementController::class, 'index'])->name('driver.ride.management');
-    Route::get('/driver/rides/create', [DriverRideManagementController::class, 'create'])->name('driver.rides.create');
-    Route::post('/driver/rides', [DriverRideManagementController::class, 'store'])->name('driver.rides.store');
-    Route::get('/driver/my-rides', [DriverRideManagementController::class, 'myRides'])->name('driver.my-rides');
-    Route::get('/driver/rides/{ride}/edit', [DriverRideManagementController::class, 'edit'])->name('driver.rides.edit');
-    Route::put('/driver/rides/{ride}', [DriverRideManagementController::class, 'update'])->name('driver.rides.update');
-    Route::get('/driver/rides/{ride}/customers/{tripType?}', [DriverRideManagementController::class, 'showRideCustomers'])->name('driver.ride.customers');
-    Route::get('/driver/earnings', [DriverRideManagementController::class, 'earnings'])->name('driver.earnings');
-    
-    // Ride completion and review routes
-    Route::post('/driver/rides/{rideId}/ongoing/{tripType?}', [RideCompletionController::class, 'markAsOngoing'])->name('driver.ride.ongoing');
-    Route::post('/driver/rides/{rideId}/complete/{tripType?}', [RideCompletionController::class, 'markAsCompleted'])->name('driver.ride.complete');
-    Route::get('/driver/rides/{rideId}/reviews', [RideCompletionController::class, 'viewRideReviews'])->name('driver.ride.reviews');
-    Route::get('/driver/reviews', [RideCompletionController::class, 'viewAllReviews'])->name('driver.reviews');
-});
+    // Ride Management for drivers (only verified drivers)
+    Route::middleware('driver.verified')->group(function () {
+        Route::get('/driver/ride-management', [DriverRideManagementController::class, 'index'])->name('driver.ride.management');
+        Route::get('/driver/rides/create', [DriverRideManagementController::class, 'create'])->name('driver.rides.create');
+        Route::post('/driver/rides', [DriverRideManagementController::class, 'store'])->name('driver.rides.store');
+        Route::get('/driver/my-rides', [DriverRideManagementController::class, 'myRides'])->name('driver.my-rides');
+        Route::get('/driver/rides/{ride}/edit', [DriverRideManagementController::class, 'edit'])->name('driver.rides.edit');
+        Route::put('/driver/rides/{ride}', [DriverRideManagementController::class, 'update'])->name('driver.rides.update');
+        Route::get('/driver/rides/{ride}/customers/{tripType?}', [DriverRideManagementController::class, 'showRideCustomers'])->name('driver.ride.customers');
+        Route::get('/driver/earnings', [DriverRideManagementController::class, 'earnings'])->name('driver.earnings');
 
-// Booking routes
-Route::get('/booking/payment/{rideId}/{tripType?}', [BookingController::class, 'showPaymentPage'])->name('booking.payment');
-Route::get('/booking/seat-selection/{rideId}/{tripType?}', [BookingController::class, 'showSeatSelection'])->name('booking.seat-selection');
-Route::post('/booking/seat-selection/{rideId}/{tripType?}', [BookingController::class, 'processSeatSelection'])->name('booking.process-seat-selection');
-Route::post('/booking/process/{rideId}/{tripType?}', [BookingController::class, 'processBooking'])->name('booking.process');
-Route::get('/booking/thank-you/{bookingId}', [BookingController::class, 'showThankYou'])->name('booking.thank-you');
-Route::get('/booking/confirmation/{bookingId}', [BookingController::class, 'showConfirmation'])->name('booking.confirmation');
+        // Ride completion and review routes
+        Route::post('/driver/rides/{rideId}/ongoing/{tripType?}', [RideCompletionController::class, 'markAsOngoing'])->name('driver.ride.ongoing');
+        Route::post('/driver/rides/{rideId}/complete/{tripType?}', [RideCompletionController::class, 'markAsCompleted'])->name('driver.ride.complete');
+        Route::get('/driver/rides/{rideId}/reviews', [RideCompletionController::class, 'viewRideReviews'])->name('driver.ride.reviews');
+        Route::get('/driver/reviews', [RideCompletionController::class, 'viewAllReviews'])->name('driver.reviews');
+    });
 
-// Payment routes
-Route::get('/payment/{rideId}/{tripType?}', [PaymentController::class, 'showPaymentPage'])->name('payment.show');
-Route::post('/payment/process/{rideId}/{tripType?}', [PaymentController::class, 'processPayment'])->name('payment.process');
-Route::get('/payment/qr/{rideId}/{tripType?}', [PaymentController::class, 'showQRPayment'])->name('payment.qr');
+    // Booking routes
+    Route::get('/booking/payment/{rideId}/{tripType?}', [BookingController::class, 'showPaymentPage'])->name('booking.payment');
+    Route::get('/booking/seat-selection/{rideId}/{tripType?}', [BookingController::class, 'showSeatSelection'])->name('booking.seat-selection');
+    Route::post('/booking/seat-selection/{rideId}/{tripType?}', [BookingController::class, 'processSeatSelection'])->name('booking.process-seat-selection');
+    Route::post('/booking/process/{rideId}/{tripType?}', [BookingController::class, 'processBooking'])->name('booking.process');
+    Route::get('/booking/thank-you/{bookingId}', [BookingController::class, 'showThankYou'])->name('booking.thank-you');
+    Route::get('/booking/confirmation/{bookingId}', [BookingController::class, 'showConfirmation'])->name('booking.confirmation');
 
-// User booking routes
-Route::get('/user/bookings', [UserBookingController::class, 'index'])->name('user.bookings');
-Route::get('/user/bookings/{bookingId}', [UserBookingController::class, 'show'])->name('user.booking.details');
-Route::get('/user/bookings/{bookingId}/receipt', [UserBookingController::class, 'printReceipt'])->name('user.booking.receipt');
+    // Payment routes
+    Route::get('/payment/{rideId}/{tripType?}', [PaymentController::class, 'showPaymentPage'])->name('payment.show');
+    Route::post('/payment/process/{rideId}/{tripType?}', [PaymentController::class, 'processPayment'])->name('payment.process');
+    Route::get('/payment/qr/{rideId}/{tripType?}', [PaymentController::class, 'showQRPayment'])->name('payment.qr');
 
-// User review routes
-Route::get('/user/bookings/{bookingId}/review/{tripType?}', [RideCompletionController::class, 'showReviewForm'])->name('user.booking.review');
-Route::post('/user/bookings/{bookingId}/review/{tripType?}', [RideCompletionController::class, 'submitReview'])->name('user.booking.review.submit');
+    // User booking routes
+    Route::get('/user/bookings', [UserBookingController::class, 'index'])->name('user.bookings');
+    Route::get('/user/bookings/{bookingId}', [UserBookingController::class, 'show'])->name('user.booking.details');
+    Route::get('/user/bookings/{bookingId}/receipt', [UserBookingController::class, 'printReceipt'])->name('user.booking.receipt');
 
-// Password change routes
-Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
-Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.submit');
+    // User review routes
+    Route::get('/user/bookings/{bookingId}/review/{tripType?}', [RideCompletionController::class, 'showReviewForm'])->name('user.booking.review');
+    Route::post('/user/bookings/{bookingId}/review/{tripType?}', [RideCompletionController::class, 'submitReview'])->name('user.booking.review.submit');
 
-// Stubs for navbar links
-Route::get('/rides', function () { return 'Available Rides'; })->name('rides');
-Route::get('/user/history', function () { return 'User History'; })->name('user.history');
+    // Password change routes
+    Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
+    Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.submit');
+
+    // Stubs for navbar links
+    Route::get('/rides', function () {
+        return 'Available Rides';
+    })->name('rides');
+    Route::get('/user/history', function () {
+        return 'User History';
+    })->name('user.history');
 
 }); // End of auth middleware group
-
-

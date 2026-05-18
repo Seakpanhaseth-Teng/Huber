@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class AdminUserController extends Controller
@@ -14,9 +14,10 @@ class AdminUserController extends Controller
     public function index()
     {
         $users = User::where('role', '!=', 'driver')
-                    ->orWhereNull('role')
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(10);
+            ->orWhereNull('role')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -49,7 +50,7 @@ class AdminUserController extends Controller
         ]);
 
         return redirect()->route('admin.users.index')
-                        ->with('success', 'User created successfully.');
+            ->with('success', 'User created successfully.');
     }
 
     /**
@@ -58,6 +59,7 @@ class AdminUserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
+
         return view('admin.users.edit', compact('user'));
     }
 
@@ -67,7 +69,7 @@ class AdminUserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
@@ -87,7 +89,7 @@ class AdminUserController extends Controller
         }
 
         return redirect()->route('admin.users.index')
-                        ->with('success', 'User updated successfully.');
+            ->with('success', 'User updated successfully.');
     }
 
     /**
@@ -99,7 +101,7 @@ class AdminUserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')
-                        ->with('success', 'User deleted successfully.');
+            ->with('success', 'User deleted successfully.');
     }
 
     /**
@@ -109,18 +111,27 @@ class AdminUserController extends Controller
     {
         $user = User::with(['ridePurchases.ride', 'rides'])->findOrFail($id);
         $today = now()->toDateString();
-        $currentBookings = $user->ridePurchases->filter(function($b) use ($today) {
-            return optional($b->ride)->date >= $today;
+        $currentBookings = $user->ridePurchases->filter(function ($b) use ($today) {
+            /** @var \App\Models\RidePurchase $b */
+            /** @var \App\Models\Ride|null $ride */
+            $ride = $b->ride;
+            return $ride && $ride->date >= $today;
         });
-        $pastBookings = $user->ridePurchases->filter(function($b) use ($today) {
-            return optional($b->ride)->date < $today;
+        $pastBookings = $user->ridePurchases->filter(function ($b) use ($today) {
+            /** @var \App\Models\RidePurchase $b */
+            /** @var \App\Models\Ride|null $ride */
+            $ride = $b->ride;
+            return $ride && $ride->date < $today;
         });
-        $currentRides = $user->rides->filter(function($r) use ($today) {
+        $currentRides = $user->rides->filter(function ($r) use ($today) {
+            /** @var \App\Models\Ride $r */
             return $r->date >= $today;
         });
-        $pastRides = $user->rides->filter(function($r) use ($today) {
+        $pastRides = $user->rides->filter(function ($r) use ($today) {
+            /** @var \App\Models\Ride $r */
             return $r->date < $today;
         });
+
         return view('admin.users.show', compact('user', 'currentBookings', 'pastBookings', 'currentRides', 'pastRides'));
     }
-} 
+}

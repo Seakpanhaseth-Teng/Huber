@@ -8,4 +8,4 @@ class HomeController extends Controller
     {
         return view('index');
     }
-} 
+}

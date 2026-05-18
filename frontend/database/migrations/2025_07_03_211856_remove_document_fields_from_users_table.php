@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
                 'driver_license_file',
-                'vehicle_registration_file', 
+                'vehicle_registration_file',
                 'insurance_certificate_file',
-                'terms_accepted'
+                'terms_accepted',
             ]);
         });
     }

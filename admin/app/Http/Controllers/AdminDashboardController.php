@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Ride;
-use App\Models\DriverDocument;
 use App\Models\RidePurchase;
+use App\Models\User;
 
 class AdminDashboardController extends Controller
 {
@@ -21,4 +20,4 @@ class AdminDashboardController extends Controller
             'totalUsers', 'totalDrivers', 'totalVerifiedDrivers', 'totalRides', 'totalEarnings'
         ));
     }
-} 
+}

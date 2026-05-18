@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Admin;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AdminAuthController extends Controller
 {
@@ -23,6 +22,7 @@ class AdminAuthController extends Controller
 
         if (Auth::guard('admin')->attempt($credentials)) {
             $request->session()->regenerate();
+
             return redirect()->route('admin.dashboard');
         }
 
@@ -34,6 +34,7 @@ class AdminAuthController extends Controller
         Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('admin.login');
     }
 
@@ -49,6 +50,7 @@ class AdminAuthController extends Controller
         if ($admin && \Illuminate\Support\Facades\Hash::check($credentials['password'], $admin->password)) {
             // Create token for API access
             $token = $admin->createToken('admin_auth_token')->plainTextToken;
+
             return response()->json([
                 'success' => true,
                 'token' => $token,
@@ -56,9 +58,10 @@ class AdminAuthController extends Controller
                     'id' => $admin->id,
                     'name' => $admin->name,
                     'email' => $admin->email,
-                ]
+                ],
             ]);
         }
+
         return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
     }
 
@@ -68,6 +71,7 @@ class AdminAuthController extends Controller
         if ($request->user()) {
             $request->user()->currentAccessToken()->delete();
         }
+
         return response()->json(['success' => true, 'message' => 'Logged out successfully.']);
     }
-} 
+}

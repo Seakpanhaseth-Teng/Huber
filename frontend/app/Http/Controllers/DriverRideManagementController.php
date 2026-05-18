@@ -2,47 +2,50 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\Ride;
+use Illuminate\Http\Request;
 
 class DriverRideManagementController extends Controller
 {
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
-        
+
         // Get all rides created by this driver
         $allRides = Ride::where('user_id', $user->id)
             ->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
             ->get();
-            
+
         // Separate go and return rides
         $goRides = collect();
         $returnRides = collect();
-        
+
         foreach ($allRides as $ride) {
             // Add the main ride (go trip)
             $goRides->push($ride);
-            
+
             // If it's a two-way ride with return details, add it as a separate return ride
             if ($ride->is_two_way && $ride->return_date && $ride->return_time) {
                 $returnRides->push($ride);
             }
         }
-            
+
         return view('ride-management.index', compact('user', 'goRides', 'returnRides'));
     }
 
     public function create()
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
+
         return view('ride-management.create', compact('user'));
     }
 
     public function store(\Illuminate\Http\Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         $validated = $request->validate([
             'station_location' => 'required|string|max:255',
@@ -114,33 +117,39 @@ class DriverRideManagementController extends Controller
         $ride = new \App\Models\Ride($validated);
         $ride->user_id = $user->id;
         $ride->save();
+
         return redirect()->route('driver.ride.management')->with('success', 'Ride created successfully!');
     }
 
     public function myRides(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
+
         return view('ride-management.my-rides', compact('user'));
     }
 
     public function edit($rideId)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.my-rides')->with('error', 'Ride not found or access denied.');
         }
+
         return view('ride-management.edit', compact('user', 'ride'));
     }
 
     public function update(Request $request, $rideId)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.my-rides')->with('error', 'Ride not found or access denied.');
         }
-        
+
         $validated = $request->validate([
             'station_location' => 'required|string|max:255',
             'destination' => 'required|string|max:255',
@@ -187,9 +196,9 @@ class DriverRideManagementController extends Controller
                 'return_station_location_map_url' => 'nullable|url|max:255',
                 'return_destination_map_url' => 'nullable|url|max:255',
             ]);
-            
+
             $validated = array_merge($validated, $returnValidation);
-            
+
             // Validate return price fields based on return ride type
             if ($request->return_is_exclusive) {
                 $request->validate([
@@ -206,7 +215,7 @@ class DriverRideManagementController extends Controller
                 ]);
                 $validated['return_exclusive_price'] = null;
             }
-            
+
             // Always set return_destination to station_location
             $validated['return_destination'] = $validated['station_location'];
         } else {
@@ -224,11 +233,13 @@ class DriverRideManagementController extends Controller
         }
 
         $ride->update($validated);
+
         return redirect()->route('driver.my-rides')->with('success', 'Ride updated successfully!');
     }
 
     public function findRides(Request $request)
     {
+        /** @var \App\Models\User|null $user */
         $user = auth()->user();
         $userId = $user?->id;
         $query = \App\Models\Ride::with(['user.driverDocuments']);
@@ -238,19 +249,19 @@ class DriverRideManagementController extends Controller
             $query->where('date', $request->input('date'));
         }
         if ($request->filled('price_min')) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('go_to_price_per_person', '>=', $request->input('price_min'))
-                  ->orWhere('go_to_exclusive_price', '>=', $request->input('price_min'))
-                  ->orWhere('return_price_per_person', '>=', $request->input('price_min'))
-                  ->orWhere('return_exclusive_price', '>=', $request->input('price_min'));
+                    ->orWhere('go_to_exclusive_price', '>=', $request->input('price_min'))
+                    ->orWhere('return_price_per_person', '>=', $request->input('price_min'))
+                    ->orWhere('return_exclusive_price', '>=', $request->input('price_min'));
             });
         }
         if ($request->filled('price_max')) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('go_to_price_per_person', '<=', $request->input('price_max'))
-                  ->orWhere('go_to_exclusive_price', '<=', $request->input('price_max'))
-                  ->orWhere('return_price_per_person', '<=', $request->input('price_max'))
-                  ->orWhere('return_exclusive_price', '<=', $request->input('price_max'));
+                    ->orWhere('go_to_exclusive_price', '<=', $request->input('price_max'))
+                    ->orWhere('return_price_per_person', '<=', $request->input('price_max'))
+                    ->orWhere('return_exclusive_price', '<=', $request->input('price_max'));
             });
         }
         if ($request->filled('departure_time')) {
@@ -284,13 +295,13 @@ class DriverRideManagementController extends Controller
                     $hasGoBookings = \App\Models\RidePurchase::where('ride_id', $ride->id)
                         ->where('trip_type', 'go')
                         ->exists();
-                    $isGoAvailable = !$hasGoBookings;
+                    $isGoAvailable = ! $hasGoBookings;
                 } else {
                     // For shared rides, check if seats are available
                     $isGoAvailable = $ride->available_seats > 0;
                 }
             }
-            
+
             if ($isGoAvailable) {
                 $hasBookedGo = false;
                 if ($userId) {
@@ -299,21 +310,21 @@ class DriverRideManagementController extends Controller
                         ->where('trip_type', 'go')
                         ->exists();
                 }
-            $rideEntries[] = [
-                'type' => 'Go',
-                'ride' => $ride,
-                'station_location' => $ride->station_location,
-                'destination' => $ride->destination,
-                'date' => $ride->date,
-                'time' => $ride->time,
+                $rideEntries[] = [
+                    'type' => 'Go',
+                    'ride' => $ride,
+                    'station_location' => $ride->station_location,
+                    'destination' => $ride->destination,
+                    'date' => $ride->date,
+                    'time' => $ride->time,
                     'available_seats' => $ride->is_exclusive ? 1 : $ride->available_seats,
-                'is_exclusive' => $ride->is_exclusive,
+                    'is_exclusive' => $ride->is_exclusive,
                     'price_per_person' => $ride->is_exclusive ? $ride->go_to_exclusive_price : $ride->go_to_price_per_person,
-                'user' => $ride->user,
+                    'user' => $ride->user,
                     'has_booked' => $hasBookedGo,
-            ];
+                ];
             }
-            
+
             // Return trip (if exists) - check availability based on ride type
             $isReturnAvailable = false;
             if ($ride->is_two_way && $ride->return_date && $ride->return_time && $ride->return_completion_status === 'pending') {
@@ -322,13 +333,13 @@ class DriverRideManagementController extends Controller
                     $hasReturnBookings = \App\Models\RidePurchase::where('ride_id', $ride->id)
                         ->where('trip_type', 'return')
                         ->exists();
-                    $isReturnAvailable = !$hasReturnBookings;
+                    $isReturnAvailable = ! $hasReturnBookings;
                 } else {
                     // For shared return rides, check if seats are available
                     $isReturnAvailable = $ride->return_available_seats > 0;
                 }
             }
-            
+
             if ($isReturnAvailable) {
                 $hasBookedReturn = false;
                 if ($userId) {
@@ -355,21 +366,23 @@ class DriverRideManagementController extends Controller
         // Apply rideType filter to both outgoing and return trips
         if ($request->filled('rideType') && in_array($request->input('rideType'), ['shared', 'exclusive'])) {
             if ($request->input('rideType') === 'exclusive') {
-                $rideEntries = array_filter($rideEntries, function($entry) {
-                    return $entry['is_exclusive'] === true || $entry['is_exclusive'] === 1;
+                $rideEntries = array_filter($rideEntries, function ($entry) {
+                    return (bool) $entry['is_exclusive'];
                 });
             } else { // shared
-                $rideEntries = array_filter($rideEntries, function($entry) {
-                    return ($entry['is_exclusive'] === false || $entry['is_exclusive'] === 0 || is_null($entry['is_exclusive'])) && $entry['available_seats'] > 0;
+                $rideEntries = array_filter($rideEntries, function ($entry) {
+                    return (! $entry['is_exclusive']) && $entry['available_seats'] > 0;
                 });
             }
         }
         // Apply price sorting after filtering
         if (($request->input('sort_by') === 'price_asc' || $request->input('sort_by') === 'price_desc')) {
-            usort($rideEntries, function($a, $b) use ($request) {
+            usort($rideEntries, function ($a, $b) use ($request) {
                 $aPrice = $a['price_per_person'] ?? 0;
                 $bPrice = $b['price_per_person'] ?? 0;
-                if ($aPrice == $bPrice) return 0;
+                if ($aPrice == $bPrice) {
+                    return 0;
+                }
                 if ($request->input('sort_by') === 'price_asc') {
                     return $aPrice <=> $bPrice;
                 } else {
@@ -380,29 +393,30 @@ class DriverRideManagementController extends Controller
         // Apply price range filter after building rideEntries
         if ($request->filled('price_min')) {
             $min = floatval($request->input('price_min'));
-            $rideEntries = array_filter($rideEntries, function($entry) use ($min) {
+            $rideEntries = array_filter($rideEntries, function ($entry) use ($min) {
                 return isset($entry['price_per_person']) && $entry['price_per_person'] >= $min;
             });
         }
         if ($request->filled('price_max')) {
             $max = floatval($request->input('price_max'));
-            $rideEntries = array_filter($rideEntries, function($entry) use ($max) {
+            $rideEntries = array_filter($rideEntries, function ($entry) use ($max) {
                 return isset($entry['price_per_person']) && $entry['price_per_person'] <= $max;
             });
         }
         // Apply 'from' and 'to' filters to rideEntries after building
         if ($request->filled('from')) {
             $from = strtolower($request->input('from'));
-            $rideEntries = array_filter($rideEntries, function($entry) use ($from) {
+            $rideEntries = array_filter($rideEntries, function ($entry) use ($from) {
                 return strpos(strtolower($entry['station_location']), $from) !== false;
             });
         }
         if ($request->filled('to')) {
             $to = strtolower($request->input('to'));
-            $rideEntries = array_filter($rideEntries, function($entry) use ($to) {
+            $rideEntries = array_filter($rideEntries, function ($entry) use ($to) {
                 return strpos(strtolower($entry['destination']), $to) !== false;
             });
         }
+
         return view('find-rides', [
             'rideEntries' => $rideEntries,
             'filters' => $request->all(),
@@ -411,11 +425,12 @@ class DriverRideManagementController extends Controller
 
     public function earnings(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
-        
+
         // Get all bookings for rides owned by this driver
         $bookings = \App\Models\RidePurchase::with(['ride', 'user'])
-            ->whereHas('ride', function($q) use ($user) {
+            ->whereHas('ride', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
             ->orderBy('created_at', 'desc')
@@ -424,15 +439,15 @@ class DriverRideManagementController extends Controller
         // Calculate statistics
         $totalEarnings = $bookings->sum('total_price');
         $totalCustomers = $bookings->unique('user_id')->count();
-        
+
         // Count completed rides (both go and return trips)
         $completedRides = \App\Models\Ride::where('user_id', $user->id)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('go_completion_status', 'completed')
-                  ->orWhere('return_completion_status', 'completed');
+                    ->orWhere('return_completion_status', 'completed');
             })
             ->get();
-        
+
         $totalRidesCompleted = 0;
         foreach ($completedRides as $ride) {
             if ($ride->go_completion_status === 'completed') {
@@ -448,6 +463,7 @@ class DriverRideManagementController extends Controller
 
     public function showRideCustomers($rideId, $tripType = null)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         // Get the ride and verify it belongs to this driver
@@ -455,19 +471,19 @@ class DriverRideManagementController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.ride.management')->with('error', 'Ride not found or you do not have permission to view it.');
         }
 
         // Get all bookings for this specific ride
         $query = \App\Models\RidePurchase::with(['user'])
             ->where('ride_id', $rideId);
-            
+
         // Filter by trip type if specified
         if ($tripType) {
             $query->where('trip_type', $tripType);
         }
-        
+
         $bookings = $query->orderBy('created_at', 'desc')->get();
 
         // Calculate seat information for visualization
@@ -497,7 +513,7 @@ class DriverRideManagementController extends Controller
                 'booking_reference' => null,
                 'contact_phone' => null,
                 'passenger_name' => null,
-                'booking_id' => null
+                'booking_id' => null,
             ];
         }
 
@@ -511,7 +527,7 @@ class DriverRideManagementController extends Controller
                         $seatMap[$seatNumber]['booking_reference'] = $booking->booking_reference;
                         $seatMap[$seatNumber]['contact_phone'] = $booking->contact_phone;
                         $seatMap[$seatNumber]['booking_id'] = $booking->id;
-                        
+
                         // Find passenger name for this specific seat
                         if ($booking->passenger_details && is_array($booking->passenger_details)) {
                             foreach ($booking->passenger_details as $passenger) {
@@ -530,7 +546,7 @@ class DriverRideManagementController extends Controller
             'total_seats' => $totalSeats,
             'available_seats' => $availableSeats,
             'booked_seats' => $totalSeats - $availableSeats,
-            'seat_map' => $seatMap
+            'seat_map' => $seatMap,
         ];
     }
-} 
+}

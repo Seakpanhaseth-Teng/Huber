@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\RidePurchase;
+use App\Models\User;
+use Illuminate\Http\Request;
 
 class UserBookingController extends Controller
 {
     public function index()
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to view your bookings.');
         }
 
@@ -20,13 +20,15 @@ class UserBookingController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('user.bookings', compact('user', 'bookings'));
+        /** @phpstan-var view-string $view */
+        $view = 'user.bookings';
+        return view($view, compact('user', 'bookings'));
     }
 
     public function show($bookingId)
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to view booking details.');
         }
 
@@ -35,17 +37,19 @@ class UserBookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 
-        return view('user.booking-details', compact('booking', 'user'));
+        /** @phpstan-var view-string $view */
+        $view = 'user.booking-details';
+        return view($view, compact('booking', 'user'));
     }
 
     public function printReceipt($bookingId)
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please login to print receipt.');
         }
 
@@ -54,11 +58,13 @@ class UserBookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 
-        return view('user.receipt', compact('booking', 'user'));
+        /** @phpstan-var view-string $view */
+        $view = 'user.receipt';
+        return view($view, compact('booking', 'user'));
     }
 
     // API Methods
@@ -66,10 +72,10 @@ class UserBookingController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to view your bookings.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
@@ -83,8 +89,8 @@ class UserBookingController extends Controller
             'status' => 'success',
             'data' => [
                 'user' => $user,
-                'bookings' => $bookings
-            ]
+                'bookings' => $bookings,
+            ],
         ]);
     }
 
@@ -92,10 +98,10 @@ class UserBookingController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to view booking details.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
@@ -104,10 +110,10 @@ class UserBookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return response()->json([
                 'message' => 'Booking not found.',
-                'status' => 'error'
+                'status' => 'error',
             ], 404);
         }
 
@@ -116,8 +122,8 @@ class UserBookingController extends Controller
             'status' => 'success',
             'data' => [
                 'booking' => $booking,
-                'user' => $user
-            ]
+                'user' => $user,
+            ],
         ]);
     }
 
@@ -125,10 +131,10 @@ class UserBookingController extends Controller
     {
         // Get user from token authentication
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Please login to print receipt.',
-                'status' => 'error'
+                'status' => 'error',
             ], 401);
         }
 
@@ -137,10 +143,10 @@ class UserBookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             return response()->json([
                 'message' => 'Booking not found.',
-                'status' => 'error'
+                'status' => 'error',
             ], 404);
         }
 
@@ -156,9 +162,9 @@ class UserBookingController extends Controller
                     'passenger_details' => $booking->passenger_details,
                     'payment_amount' => $booking->total_amount,
                     'booking_date' => $booking->created_at,
-                    'trip_type' => $booking->trip_type
-                ]
-            ]
+                    'trip_type' => $booking->trip_type,
+                ],
+            ],
         ]);
     }
 }

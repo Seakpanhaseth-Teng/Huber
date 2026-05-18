@@ -30,7 +30,7 @@ return new class extends Migration
                 'go_completion_status',
                 'return_completion_status',
                 'go_completed_at',
-                'return_completed_at'
+                'return_completed_at',
             ]);
         });
     }

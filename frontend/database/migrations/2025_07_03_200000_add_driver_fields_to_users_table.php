@@ -1,9 +1,11 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
@@ -16,10 +18,11 @@ return new class extends Migration {
             $table->string('license_plate')->nullable();
         });
     }
+
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn(['license_number', 'license_expiry', 'vehicle_make', 'vehicle_model', 'vehicle_year', 'vehicle_color', 'license_plate']);
         });
     }
-}; 
+};

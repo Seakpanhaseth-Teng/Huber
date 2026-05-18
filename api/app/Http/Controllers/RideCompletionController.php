@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Ride;
-use App\Models\RidePurchase;
 use App\Models\RideReview;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use App\Services\ReviewService;
 use App\Services\DriverStatsService;
+use App\Services\ReviewService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RideCompletionController extends Controller
 {
     protected $reviewService;
+
     protected $driverStatsService;
 
     public function __construct()
@@ -41,10 +40,12 @@ class RideCompletionController extends Controller
     public function markAsOngoing(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.ride.management')->with('error', 'Ride not found or access denied.');
         }
 
@@ -52,10 +53,12 @@ class RideCompletionController extends Controller
             DB::beginTransaction();
             $this->updateTripStatus($ride, $tripType, 'ongoing');
             DB::commit();
+
             return redirect()->route('driver.ride.customers', ['ride' => $rideId, 'tripType' => $tripType])
                 ->with('success', 'Ride marked as ongoing successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to mark ride as ongoing. Please try again.');
         }
     }
@@ -63,10 +66,12 @@ class RideCompletionController extends Controller
     public function markAsCompleted(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.ride.management')->with('error', 'Ride not found or access denied.');
         }
 
@@ -74,10 +79,12 @@ class RideCompletionController extends Controller
             DB::beginTransaction();
             $this->updateTripStatus($ride, $tripType, 'completed');
             DB::commit();
+
             return redirect()->route('driver.ride.customers', ['ride' => $rideId, 'tripType' => $tripType])
                 ->with('success', 'Ride marked as completed successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to mark ride as completed. Please try again.');
         }
     }
@@ -85,10 +92,12 @@ class RideCompletionController extends Controller
     public function showReviewForm($bookingId, $tripType = 'go')
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $booking = $this->reviewService->getBookingWithOwnershipCheck($bookingId, $user->id);
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 
@@ -104,16 +113,20 @@ class RideCompletionController extends Controller
             return redirect()->route('user.bookings')->with('error', 'You have already reviewed this ride.');
         }
 
-        return view('user.review-form', compact('booking', 'tripType'));
+        /** @phpstan-var view-string $view */
+        $view = 'user.review-form';
+        return view($view, compact('booking', 'tripType'));
     }
 
     public function submitReview(Request $request, $bookingId, $tripType = 'go')
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $booking = $this->reviewService->getBookingWithOwnershipCheck($bookingId, $user->id);
-        if (!$booking) {
+        if (! $booking) {
             return redirect()->route('user.bookings')->with('error', 'Booking not found.');
         }
 
@@ -150,28 +163,36 @@ class RideCompletionController extends Controller
     public function viewRideReviews($rideId)
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $ride = Ride::with(['reviews.user', 'reviews.ridePurchase'])
             ->where('id', $rideId)
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$ride) {
+        if (! $ride) {
             return redirect()->route('driver.ride.management')->with('error', 'Ride not found or access denied.');
         }
 
-        return view('ride-management.reviews', compact('ride'));
+        /** @phpstan-var view-string $view */
+        $view = 'ride-management.reviews';
+        return view($view, compact('ride'));
     }
 
     public function viewAllReviews()
     {
         $user = $this->getWebUser();
-        if (!$user) return $this->webRedirectLogin();
+        if (! $user) {
+            return $this->webRedirectLogin();
+        }
 
         $stats = $this->driverStatsService->getReviewsStats($user);
 
-        return view('driver.all-reviews', [
+        /** @phpstan-var view-string $view */
+        $view = 'driver.all-reviews';
+        return view($view, [
             'reviews' => $stats['reviews'],
             'totalReviews' => $stats['total_reviews'],
             'averageOverallRating' => $stats['average_overall_rating'],
@@ -185,21 +206,27 @@ class RideCompletionController extends Controller
     public function apiMarkAsOngoing(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to update ride status.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to update ride status.', 401);
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) return $this->jsonError('Ride not found or access denied.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found or access denied.', 404);
+        }
 
         try {
             DB::beginTransaction();
             $this->updateTripStatus($ride, $tripType, 'ongoing');
             DB::commit();
+
             return $this->jsonSuccess('Ride marked as ongoing successfully!', [
                 'ride' => $ride,
                 'trip_type' => $tripType,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return $this->jsonError('Failed to mark ride as ongoing. Please try again.', 500);
         }
     }
@@ -207,21 +234,27 @@ class RideCompletionController extends Controller
     public function apiMarkAsCompleted(Request $request, $rideId, $tripType = 'go')
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to complete rides.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to complete rides.', 401);
+        }
 
         $ride = Ride::where('id', $rideId)->where('user_id', $user->id)->first();
-        if (!$ride) return $this->jsonError('Ride not found or access denied.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found or access denied.', 404);
+        }
 
         try {
             DB::beginTransaction();
             $this->updateTripStatus($ride, $tripType, 'completed');
             DB::commit();
+
             return $this->jsonSuccess('Ride marked as completed successfully!', [
                 'ride' => $ride,
                 'trip_type' => $tripType,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return $this->jsonError('Failed to mark ride as completed. Please try again.', 500);
         }
     }
@@ -229,10 +262,14 @@ class RideCompletionController extends Controller
     public function apiShowReviewForm(Request $request, $bookingId, $tripType = 'go')
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to review rides.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to review rides.', 401);
+        }
 
         $booking = $this->reviewService->getBookingWithOwnershipCheck($bookingId, $user->id);
-        if (!$booking) return $this->jsonError('Booking not found.', 404);
+        if (! $booking) {
+            return $this->jsonError('Booking not found.', 404);
+        }
 
         $rideStatus = $this->reviewService->getRideStatus($booking, $tripType);
         if ($rideStatus === 'pending') {
@@ -264,10 +301,14 @@ class RideCompletionController extends Controller
     public function apiSubmitReview(Request $request, $bookingId, $tripType = 'go')
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to submit reviews.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to submit reviews.', 401);
+        }
 
         $booking = $this->reviewService->getBookingWithOwnershipCheck($bookingId, $user->id);
-        if (!$booking) return $this->jsonError('Booking not found.', 404);
+        if (! $booking) {
+            return $this->jsonError('Booking not found.', 404);
+        }
 
         $rideStatus = $this->reviewService->getRideStatus($booking, $tripType);
         if ($rideStatus !== 'completed') {
@@ -314,10 +355,14 @@ class RideCompletionController extends Controller
     public function apiViewRideReviews(Request $request, $rideId)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to view reviews.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to view reviews.', 401);
+        }
 
         $ride = Ride::find($rideId);
-        if (!$ride) return $this->jsonError('Ride not found.', 404);
+        if (! $ride) {
+            return $this->jsonError('Ride not found.', 404);
+        }
 
         $reviews = RideReview::with(['user', 'ride'])
             ->where('ride_id', $rideId)
@@ -333,7 +378,9 @@ class RideCompletionController extends Controller
     public function apiViewAllReviews(Request $request)
     {
         $user = $this->getApiUser($request);
-        if (!$user) return $this->jsonError('Please login to view reviews.', 401);
+        if (! $user) {
+            return $this->jsonError('Please login to view reviews.', 401);
+        }
 
         $reviews = RideReview::with(['user', 'ride'])
             ->orderBy('created_at', 'desc')
