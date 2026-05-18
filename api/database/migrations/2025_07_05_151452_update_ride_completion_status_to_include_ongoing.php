@@ -11,8 +11,11 @@ return new class extends Migration
     public function up(): void
     {
         // Update the enum values to include 'ongoing'
-        DB::statement("ALTER TABLE rides MODIFY COLUMN go_completion_status ENUM('pending', 'ongoing', 'completed', 'cancelled') DEFAULT 'pending'");
-        DB::statement("ALTER TABLE rides MODIFY COLUMN return_completion_status ENUM('pending', 'ongoing', 'completed', 'cancelled') DEFAULT 'pending'");
+        // SQLite doesn't support MODIFY, so only run for MySQL/MariaDB
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE rides MODIFY COLUMN go_completion_status ENUM('pending', 'ongoing', 'completed', 'cancelled') DEFAULT 'pending'");
+            DB::statement("ALTER TABLE rides MODIFY COLUMN return_completion_status ENUM('pending', 'ongoing', 'completed', 'cancelled') DEFAULT 'pending'");
+        }
     }
 
     /**
@@ -21,7 +24,10 @@ return new class extends Migration
     public function down(): void
     {
         // Revert back to original enum values
-        DB::statement("ALTER TABLE rides MODIFY COLUMN go_completion_status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending'");
-        DB::statement("ALTER TABLE rides MODIFY COLUMN return_completion_status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending'");
+        // SQLite doesn't support MODIFY, so only run for MySQL/MariaDB
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE rides MODIFY COLUMN go_completion_status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending'");
+            DB::statement("ALTER TABLE rides MODIFY COLUMN return_completion_status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending'");
+        }
     }
 };
