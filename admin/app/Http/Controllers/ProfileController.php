@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    public function show()
+    public function show(): View
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -22,7 +24,7 @@ class ProfileController extends Controller
         return view('profile', compact('user', 'firstName', 'lastName'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -70,13 +72,22 @@ class ProfileController extends Controller
         try {
             // Handle profile picture upload
             if ($request->hasFile('profile_picture')) {
+                $file = $request->file('profile_picture');
+
+                // Verify file is a genuine image (not just MIME-spoofed)
+                $tempPath = $file->getPathname();
+                $imageInfo = @getimagesize($tempPath);
+                if ($imageInfo === false) {
+                    return back()->withErrors(['profile_picture' => 'The file is not a valid image.'])->withInput();
+                }
+
                 // Delete old profile picture if exists
                 if ($user->profile_picture) {
                     Storage::disk('public')->delete($user->profile_picture);
                 }
 
                 // Store new profile picture
-                $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
+                $profilePicturePath = $file->store('profile_pictures', 'public');
                 $user->profile_picture = $profilePicturePath;
             }
 

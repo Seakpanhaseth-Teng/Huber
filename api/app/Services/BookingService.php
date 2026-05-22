@@ -12,7 +12,7 @@ class BookingService
 {
     public function generateBookingReference(): string
     {
-        return 'BK' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
+        return 'BK' . date('Ymd') . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
     }
 
     public function createBooking(

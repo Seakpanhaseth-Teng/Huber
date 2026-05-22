@@ -41,15 +41,7 @@
                                     $pickupMapUrl = $booking->trip_type === 'return' ? $booking->ride->return_station_location_map_url : $booking->ride->station_location_map_url;
                                     $pickupLocation = $booking->trip_type === 'return' ? $booking->ride->destination : $booking->ride->station_location;
                                 @endphp
-                                @if($pickupMapUrl)
-                                    <a href="{{ $pickupMapUrl }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1 ms-4">
-                                        <i class="fas fa-map-marker-alt me-1"></i>View on Map
-                                    </a>
-                                @else
-                                    <a href="https://maps.google.com/?q={{ urlencode($pickupLocation) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1 ms-4">
-                                        <i class="fas fa-map-marker-alt me-1"></i>View on Map
-                                    </a>
-                                @endif
+                                <x-map-link :mapUrl="$pickupMapUrl" :location="$pickupLocation" />
                             </div>
                             
                             <div class="mb-3">
@@ -64,15 +56,7 @@
                                     $destinationMapUrl = $booking->trip_type === 'return' ? $booking->ride->return_destination_map_url : $booking->ride->destination_map_url;
                                     $destinationLocation = $booking->trip_type === 'return' ? $booking->ride->station_location : $booking->ride->destination;
                                 @endphp
-                                @if($destinationMapUrl)
-                                    <a href="{{ $destinationMapUrl }}" target="_blank" class="btn btn-sm btn-outline-success mt-1 ms-4">
-                                        <i class="fas fa-map-marker-alt me-1"></i>View on Map
-                                    </a>
-                                @else
-                                    <a href="https://maps.google.com/?q={{ urlencode($destinationLocation) }}" target="_blank" class="btn btn-sm btn-outline-success mt-1 ms-4">
-                                        <i class="fas fa-map-marker-alt me-1"></i>View on Map
-                                    </a>
-                                @endif
+                                <x-map-link :mapUrl="$destinationMapUrl" :location="$destinationLocation" class="btn btn-sm btn-outline-success mt-1 ms-4" />
                             </div>
                             
                             <div class="mb-3">
@@ -164,7 +148,7 @@
                                             @php
                                                 $routeUrl = "https://maps.google.com/maps?f=d&saddr=" . urlencode($pickupLocation) . "&daddr=" . urlencode($destinationLocation);
                                             @endphp
-                                            <a href="{{ $routeUrl }}" target="_blank" class="btn btn-sm btn-primary">
+                                            <a href="{{ $routeUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-route me-1"></i>Get Directions
                                             </a>
                                         </div>
@@ -261,7 +245,7 @@
                 <a href="{{ route('user.bookings') }}" class="btn btn-primary px-4 py-2 me-3">
                     <i class="fas fa-list me-2"></i>View All Bookings
                 </a>
-                <a href="{{ route('user.booking.receipt', $booking->id) }}" class="btn btn-success px-4 py-2 me-3" target="_blank">
+                <a href="{{ route('user.booking.receipt', $booking->id) }}" class="btn btn-success px-4 py-2 me-3" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-print me-2"></i>Print Receipt
                 </a>
                 <a href="{{ route('find.rides') }}" class="btn btn-outline-secondary px-4 py-2">

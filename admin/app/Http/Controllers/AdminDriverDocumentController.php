@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\DriverDocument;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class AdminDriverDocumentController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         // Get all drivers who have documents
         $drivers = User::where('role', 'driver')
@@ -20,7 +22,7 @@ class AdminDriverDocumentController extends Controller
         return view('admin.driver_documents.index', compact('drivers'));
     }
 
-    public function show($id)
+    public function show($id): View
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driverDocument = DriverDocument::where('user_id', $driver->id)->first();
@@ -28,7 +30,7 @@ class AdminDriverDocumentController extends Controller
         return view('admin.driver_documents.show', compact('driver', 'driverDocument'));
     }
 
-    public function verify($id)
+    public function verify($id): RedirectResponse
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->update(['is_verified' => true]);
@@ -37,7 +39,7 @@ class AdminDriverDocumentController extends Controller
             ->with('success', 'Driver has been verified successfully!');
     }
 
-    public function unverify($id)
+    public function unverify($id): RedirectResponse
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->update(['is_verified' => false]);
@@ -46,12 +48,12 @@ class AdminDriverDocumentController extends Controller
             ->with('success', 'Driver verification has been revoked.');
     }
 
-    public function create()
+    public function create(): View
     {
         return view('admin.driver_documents.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -62,14 +64,14 @@ class AdminDriverDocumentController extends Controller
         return redirect()->route('admin.driver_documents.index')->with('success', 'Driver document created successfully');
     }
 
-    public function edit($id)
+    public function edit($id): View
     {
         $document = DriverDocument::findOrFail($id);
 
         return view('admin.driver_documents.edit', compact('document'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
         $document = DriverDocument::findOrFail($id);
         $validated = $request->validate([
@@ -81,7 +83,7 @@ class AdminDriverDocumentController extends Controller
         return redirect()->route('admin.driver_documents.index')->with('success', 'Driver document updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy($id): RedirectResponse
     {
         $document = DriverDocument::findOrFail($id);
         $document->delete();

@@ -3,18 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function showLogin(): View
     {
         return view('login');
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->invalidate();
@@ -23,22 +25,22 @@ class AuthController extends Controller
         return redirect()->route('home');
     }
 
-    public function showChooseRole()
+    public function showChooseRole(): View
     {
         return view('choose-role');
     }
 
-    public function showUserRegistration()
+    public function showUserRegistration(): View
     {
         return view('register');
     }
 
-    public function showDriverRegistration()
+    public function showDriverRegistration(): View
     {
         return view('register-driver');
     }
 
-    public function login(Request $request)
+    public function login(Request $request): RedirectResponse
     {
         $request->validate([
             'email' => 'required|email',
@@ -49,6 +51,7 @@ class AuthController extends Controller
 
         if ($user && Hash::check($request->password, $user->password)) {
             Auth::login($user);
+            $request->session()->regenerate();
 
             // Redirect based on role
             if ($user->role === 'driver') {
@@ -62,6 +65,7 @@ class AuthController extends Controller
             return redirect()->route('user.profile');
         }
 
+        \Illuminate\Support\Facades\Log::warning('Failed login attempt', ['email' => $request->email, 'ip' => $request->ip()]);
         return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
     }
 }

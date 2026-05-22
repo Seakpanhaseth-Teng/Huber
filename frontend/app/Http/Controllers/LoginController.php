@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
-    public function login(Request $request)
+    public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -19,14 +21,16 @@ class LoginController extends Controller
         $user = User::where('email', $credentials['email'])->first();
         if ($user && Hash::check($credentials['password'], $user->password)) {
             Auth::login($user);
+            $request->session()->regenerate();
 
             return redirect()->route('user.profile'); // Redirect to profile page
         }
 
+        \Illuminate\Support\Facades\Log::warning('Failed login attempt', ['email' => $credentials['email'], 'ip' => $request->ip()]);
         return back()->with('error', 'Invalid credentials.');
     }
 
-    public function apiLogin(Request $request)
+    public function apiLogin(Request $request): JsonResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -61,15 +65,18 @@ class LoginController extends Controller
             ]);
         }
 
+        \Illuminate\Support\Facades\Log::warning('Failed API login attempt', ['email' => $credentials['email'], 'ip' => $request->ip()]);
         return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
     }
 
-    public function apiLogout(Request $request)
+    public function apiLogout(Request $request): JsonResponse
     {
         if ($request->user()) {
             $request->user()->currentAccessToken()->delete();
         }
-        $request->session()->forget(['user', 'user_role']);
+        \Illuminate\Support\Facades\Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json(['success' => true, 'message' => 'Logged out successfully.']);
     }

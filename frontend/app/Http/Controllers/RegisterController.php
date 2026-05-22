@@ -4,19 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\DriverDocument;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
-    public function apiRegister(Request $request)
+    public function apiRegister(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
 
         $user = User::create([
@@ -36,14 +38,14 @@ class RegisterController extends Controller
         ]);
     }
 
-    public function apiRegisterDriver(Request $request)
+    public function apiRegisterDriver(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
             'license_number' => ['required', 'string', 'max:255'],
             'license_expiry' => ['required', 'date'],
             'vehicle_model' => ['required', 'string', 'max:255'],
@@ -96,7 +98,7 @@ class RegisterController extends Controller
         ]);
     }
 
-    public function apiRegisterDriverDocs(Request $request)
+    public function apiRegisterDriverDocs(Request $request): JsonResponse
     {
         try {
             \Log::info('Driver docs upload request received', [
@@ -164,9 +166,7 @@ class RegisterController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed: ' . implode(', ', array_map(function ($errors) {
-                    return implode(', ', $errors);
-                }, $e->errors())),
+                'message' => 'One or more fields failed validation.',
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {

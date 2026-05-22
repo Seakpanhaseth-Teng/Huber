@@ -6,8 +6,11 @@ use App\Models\Ride;
 use App\Models\RideReview;
 use App\Services\DriverStatsService;
 use App\Services\ReviewService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class RideCompletionController extends Controller
 {
@@ -37,7 +40,7 @@ class RideCompletionController extends Controller
         $ride->save();
     }
 
-    public function markAsOngoing(Request $request, $rideId, $tripType = 'go')
+    public function markAsOngoing(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -63,7 +66,7 @@ class RideCompletionController extends Controller
         }
     }
 
-    public function markAsCompleted(Request $request, $rideId, $tripType = 'go')
+    public function markAsCompleted(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -89,7 +92,7 @@ class RideCompletionController extends Controller
         }
     }
 
-    public function showReviewForm($bookingId, $tripType = 'go')
+    public function showReviewForm($bookingId, $tripType = 'go'): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -118,7 +121,7 @@ class RideCompletionController extends Controller
         return view($view, compact('booking', 'tripType'));
     }
 
-    public function submitReview(Request $request, $bookingId, $tripType = 'go')
+    public function submitReview(Request $request, $bookingId, $tripType = 'go'): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -160,7 +163,7 @@ class RideCompletionController extends Controller
         }
     }
 
-    public function viewRideReviews($rideId)
+    public function viewRideReviews($rideId): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -181,7 +184,7 @@ class RideCompletionController extends Controller
         return view($view, compact('ride'));
     }
 
-    public function viewAllReviews()
+    public function viewAllReviews(): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -203,7 +206,7 @@ class RideCompletionController extends Controller
     }
 
     // API Methods
-    public function apiMarkAsOngoing(Request $request, $rideId, $tripType = 'go')
+    public function apiMarkAsOngoing(Request $request, $rideId, $tripType = 'go'): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -231,7 +234,7 @@ class RideCompletionController extends Controller
         }
     }
 
-    public function apiMarkAsCompleted(Request $request, $rideId, $tripType = 'go')
+    public function apiMarkAsCompleted(Request $request, $rideId, $tripType = 'go'): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -259,7 +262,7 @@ class RideCompletionController extends Controller
         }
     }
 
-    public function apiShowReviewForm(Request $request, $bookingId, $tripType = 'go')
+    public function apiShowReviewForm(Request $request, $bookingId, $tripType = 'go'): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -298,7 +301,7 @@ class RideCompletionController extends Controller
         ]);
     }
 
-    public function apiSubmitReview(Request $request, $bookingId, $tripType = 'go')
+    public function apiSubmitReview(Request $request, $bookingId, $tripType = 'go'): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -352,7 +355,7 @@ class RideCompletionController extends Controller
         }
     }
 
-    public function apiViewRideReviews(Request $request, $rideId)
+    public function apiViewRideReviews(Request $request, $rideId): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -375,7 +378,7 @@ class RideCompletionController extends Controller
         ]);
     }
 
-    public function apiViewAllReviews(Request $request)
+    public function apiViewAllReviews(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {

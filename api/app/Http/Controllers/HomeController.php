@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
+
 class HomeController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         return view('index');
     }
 
-    public function apiIndex()
+    public function apiIndex(): JsonResponse
     {
         return response()->json([
             'message' => 'Welcome to Huber - Your Ride Sharing Platform',

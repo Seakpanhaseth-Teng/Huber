@@ -231,7 +231,7 @@
                                     <p class="mb-1"><strong>Driver's License</strong></p>
                                     @if($driver->driverDocuments->driver_license_file)
                                         <a href="{{ asset('storage/' . $driver->driverDocuments->driver_license_file) }}" 
-                                           target="_blank" class="btn btn-sm btn-outline-primary">
+                                           target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-download me-1"></i> View
                                         </a>
                                     @else
@@ -245,7 +245,7 @@
                                     <p class="mb-1"><strong>Vehicle Registration</strong></p>
                                     @if($driver->driverDocuments->vehicle_registration_file)
                                         <a href="{{ asset('storage/' . $driver->driverDocuments->vehicle_registration_file) }}" 
-                                           target="_blank" class="btn btn-sm btn-outline-success">
+                                           target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
                                             <i class="fas fa-download me-1"></i> View
                                         </a>
                                     @else
@@ -259,7 +259,7 @@
                                     <p class="mb-1"><strong>Insurance Certificate</strong></p>
                                     @if($driver->driverDocuments->insurance_certificate_file)
                                         <a href="{{ asset('storage/' . $driver->driverDocuments->insurance_certificate_file) }}" 
-                                           target="_blank" class="btn btn-sm btn-outline-warning">
+                                           target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-warning">
                                             <i class="fas fa-download me-1"></i> View
                                         </a>
                                     @else

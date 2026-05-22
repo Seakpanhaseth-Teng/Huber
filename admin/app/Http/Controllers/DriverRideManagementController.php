@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ride;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class DriverRideManagementController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -35,7 +37,7 @@ class DriverRideManagementController extends Controller
         return view('ride-management.index', compact('user', 'goRides', 'returnRides'));
     }
 
-    public function create()
+    public function create(): View
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -43,7 +45,7 @@ class DriverRideManagementController extends Controller
         return view('ride-management.create', compact('user'));
     }
 
-    public function store(\Illuminate\Http\Request $request)
+    public function store(\Illuminate\Http\Request $request): RedirectResponse
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -62,11 +64,11 @@ class DriverRideManagementController extends Controller
             'return_time' => 'nullable',
             'return_available_seats' => 'nullable|integer',
             'return_is_exclusive' => 'nullable|boolean',
-            // Map URL fields
-            'station_location_map_url' => 'nullable|url|max:255',
-            'destination_map_url' => 'nullable|url|max:255',
-            'return_station_location_map_url' => 'nullable|url|max:255',
-            'return_destination_map_url' => 'nullable|url|max:255',
+            // Map URL fields — restricted to Google Maps for open redirect prevention
+            'station_location_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+            'destination_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+            'return_station_location_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+            'return_destination_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
             // Price fields - conditional based on ride type
             'go_to_price_per_person' => 'nullable|numeric|min:0',
             'go_to_exclusive_price' => 'nullable|numeric|min:0',
@@ -121,7 +123,7 @@ class DriverRideManagementController extends Controller
         return redirect()->route('driver.ride.management')->with('success', 'Ride created successfully!');
     }
 
-    public function myRides(Request $request)
+    public function myRides(Request $request): View
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -129,7 +131,7 @@ class DriverRideManagementController extends Controller
         return view('ride-management.my-rides', compact('user'));
     }
 
-    public function edit($rideId)
+    public function edit($rideId): View|RedirectResponse
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -141,7 +143,7 @@ class DriverRideManagementController extends Controller
         return view('ride-management.edit', compact('user', 'ride'));
     }
 
-    public function update(Request $request, $rideId)
+    public function update(Request $request, $rideId): RedirectResponse
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -159,8 +161,8 @@ class DriverRideManagementController extends Controller
             'is_exclusive' => 'required|boolean',
             'is_two_way' => 'required|boolean',
             // Map URL fields
-            'station_location_map_url' => 'nullable|url|max:255',
-            'destination_map_url' => 'nullable|url|max:255',
+            'station_location_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+            'destination_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
             // Price fields - conditional based on ride type
             'go_to_price_per_person' => 'nullable|numeric|min:0',
             'go_to_exclusive_price' => 'nullable|numeric|min:0',
@@ -193,8 +195,8 @@ class DriverRideManagementController extends Controller
                 'return_is_exclusive' => 'required|boolean',
                 'return_price_per_person' => 'nullable|numeric|min:0',
                 'return_exclusive_price' => 'nullable|numeric|min:0',
-                'return_station_location_map_url' => 'nullable|url|max:255',
-                'return_destination_map_url' => 'nullable|url|max:255',
+                'return_station_location_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+                'return_destination_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
             ]);
 
             $validated = array_merge($validated, $returnValidation);
@@ -237,7 +239,7 @@ class DriverRideManagementController extends Controller
         return redirect()->route('driver.my-rides')->with('success', 'Ride updated successfully!');
     }
 
-    public function findRides(Request $request)
+    public function findRides(Request $request): View
     {
         /** @var \App\Models\User|null $user */
         $user = auth()->user();
@@ -423,7 +425,7 @@ class DriverRideManagementController extends Controller
         ]);
     }
 
-    public function earnings(Request $request)
+    public function earnings(Request $request): View
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -461,7 +463,7 @@ class DriverRideManagementController extends Controller
         return view('ride-management.earnings', compact('user', 'bookings', 'totalEarnings', 'totalCustomers', 'totalRidesCompleted'));
     }
 
-    public function showRideCustomers($rideId, $tripType = null)
+    public function showRideCustomers($rideId, $tripType = null): View|RedirectResponse
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();

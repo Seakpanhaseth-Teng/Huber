@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\DriverStatsService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class AdminDriverController extends Controller
 {
@@ -17,7 +21,7 @@ class AdminDriverController extends Controller
         $this->driverStatsService = app(DriverStatsService::class);
     }
 
-    public function index()
+    public function index(): View
     {
         $drivers = User::where('role', 'driver')
             ->with(['rides', 'driverDocuments'])
@@ -28,7 +32,7 @@ class AdminDriverController extends Controller
         return view($view, compact('drivers'));
     }
 
-    public function show($id)
+    public function show($id): View
     {
         $driver = User::where('role', 'driver')
             ->with(['rides', 'driverDocuments', 'ridePurchases'])
@@ -53,19 +57,19 @@ class AdminDriverController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(): View
     {
         /** @phpstan-var view-string $view */
         $view = 'admin.drivers.create';
         return view($view);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8',
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
         User::create([
             'name' => $request->name,
@@ -78,22 +82,22 @@ class AdminDriverController extends Controller
         return redirect()->route('admin.drivers.index')->with('success', 'Driver created successfully');
     }
 
-    public function edit($id)
+    public function edit($id): View
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
-
         /** @phpstan-var view-string $view */
         $view = 'admin.drivers.edit';
+
         return view($view, compact('driver'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $driver->id,
-            'password' => 'nullable|min:8',
+            'password' => ['nullable', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
         $driver->name = $request->name;
         $driver->email = $request->email;
@@ -105,7 +109,7 @@ class AdminDriverController extends Controller
         return redirect()->route('admin.drivers.index')->with('success', 'Driver updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy($id): RedirectResponse
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->delete();
@@ -114,7 +118,7 @@ class AdminDriverController extends Controller
     }
 
     // API Methods
-    public function apiIndex()
+    public function apiIndex(): JsonResponse
     {
         $drivers = User::where('role', 'driver')->with(['rides', 'driverDocuments'])->paginate(12);
 
@@ -124,12 +128,12 @@ class AdminDriverController extends Controller
         ]);
     }
 
-    public function apiStore(Request $request)
+    public function apiStore(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8',
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
         $driver = User::create([
             'name' => $validated['name'],
@@ -142,7 +146,7 @@ class AdminDriverController extends Controller
         return response()->json(['success' => true, 'data' => $driver]);
     }
 
-    public function apiShow($id)
+    public function apiShow($id): JsonResponse
     {
         $driver = User::where('role', 'driver')
             ->with(['rides', 'driverDocuments', 'ridePurchases'])
@@ -164,13 +168,13 @@ class AdminDriverController extends Controller
         ]);
     }
 
-    public function apiUpdate(Request $request, $id)
+    public function apiUpdate(Request $request, $id): JsonResponse
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $validated = $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $driver->id,
-            'password' => 'nullable|min:8',
+            'password' => ['nullable', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
         $driver->name = $validated['name'];
         $driver->email = $validated['email'];
@@ -182,7 +186,7 @@ class AdminDriverController extends Controller
         return response()->json(['success' => true, 'data' => $driver]);
     }
 
-    public function apiDestroy($id)
+    public function apiDestroy($id): JsonResponse
     {
         $driver = User::where('role', 'driver')->findOrFail($id);
         $driver->delete();

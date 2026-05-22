@@ -5,13 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
-    public function showPaymentPage(Request $request, $rideId, $tripType = 'go')
+    public function showPaymentPage(Request $request, $rideId, $tripType = 'go'): View|RedirectResponse
     {
         $user = auth()->user();
         if (! $user) {
@@ -78,7 +81,7 @@ class PaymentController extends Controller
         ));
     }
 
-    public function processPayment(Request $request, $rideId, $tripType = 'go')
+    public function processPayment(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = auth()->user();
         if (! $user) {
@@ -172,7 +175,7 @@ class PaymentController extends Controller
             ];
 
             // Generate booking reference
-            $bookingReference = 'BK' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
+            $bookingReference = 'BK' . date('Ymd') . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
 
             // Create the booking
             $booking = RidePurchase::create(array_merge([
@@ -224,7 +227,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function showQRPayment(Request $request, $rideId, $tripType = 'go')
+    public function showQRPayment(Request $request, $rideId, $tripType = 'go'): View|RedirectResponse
     {
         $user = auth()->user();
         if (! $user) {
@@ -296,7 +299,7 @@ class PaymentController extends Controller
     }
 
     // API Methods
-    public function apiShowPaymentPage(Request $request, $rideId, $tripType = 'go')
+    public function apiShowPaymentPage(Request $request, $rideId, $tripType = 'go'): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();
@@ -375,7 +378,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function apiProcessPayment(Request $request, $rideId, $tripType = 'go')
+    public function apiProcessPayment(Request $request, $rideId, $tripType = 'go'): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();
@@ -441,6 +444,27 @@ class PaymentController extends Controller
 
         $paymentMethod = $request->input('payment_method');
 
+        // Re-validate booking data integrity
+        if (! isset($bookingData['selected_seats']) || ! isset($bookingData['passenger_details'])) {
+            return response()->json([
+                'message' => 'Invalid booking data. Please start your booking again.',
+                'status' => 'error',
+            ], 400);
+        }
+
+        // Prevent double-booking: check user hasn't already booked this ride
+        $existingBooking = RidePurchase::where('ride_id', $rideId)
+            ->where('user_id', $user->id)
+            ->where('trip_type', $tripType)
+            ->where('seats_confirmed', true)
+            ->exists();
+        if ($existingBooking) {
+            return response()->json([
+                'message' => 'You have already booked this ride.',
+                'status' => 'error',
+            ], 409);
+        }
+
         try {
             DB::beginTransaction();
 
@@ -463,11 +487,51 @@ class PaymentController extends Controller
             }
 
             $numberOfSeats = (int) ($bookingData['number_of_seats'] ?? 0);
-            if ($availableSeats <= 0 || $numberOfSeats > $availableSeats) {
+            if ($numberOfSeats < 1 || $availableSeats <= 0 || $numberOfSeats > $availableSeats) {
                 DB::rollBack();
 
                 return response()->json([
                     'message' => 'Not enough seats available.',
+                    'status' => 'error',
+                ], 409);
+            }
+
+            // Re-check no double-booking inside the transaction (TOCTOU guard)
+            $alreadyBooked = RidePurchase::where('ride_id', $rideId)
+                ->where('user_id', $user->id)
+                ->where('trip_type', $tripType)
+                ->where('seats_confirmed', true)
+                ->exists();
+            if ($alreadyBooked) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'You have already booked this ride.',
+                    'status' => 'error',
+                ], 409);
+            }
+
+            // Re-check that selected seats have not been taken since the booking data was created
+            $bookedSeats = RidePurchase::where('ride_id', $rideId)
+                ->where('trip_type', $tripType)
+                ->where('seats_confirmed', true)
+                ->pluck('selected_seats')
+                ->flatten()
+                ->filter()
+                ->toArray();
+            $conflictingSeats = array_intersect($bookingData['selected_seats'], $bookedSeats);
+            if (! empty($conflictingSeats)) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Some selected seats are no longer available.',
+                    'status' => 'error',
+                ], 409);
+            }
+
+            // Validate passenger_details count matches number_of_seats
+            if (count($bookingData['passenger_details']) !== $numberOfSeats) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Booking data is inconsistent.',
                     'status' => 'error',
                 ], 409);
             }
@@ -479,14 +543,14 @@ class PaymentController extends Controller
                 $pricePerSeat = $ride->is_exclusive ? $ride->go_to_exclusive_price : $ride->go_to_price_per_person;
             }
 
-            // Calculate total price
+            // Calculate total price (derived from DB, not request — safe)
             $totalPrice = $ride->is_exclusive || ($tripType === 'return' && $ride->return_is_exclusive) ? $pricePerSeat : ($pricePerSeat * $numberOfSeats);
 
             // Generate a simulated payment reference
             $paymentReference = 'PAY-' . strtoupper(bin2hex(random_bytes(8)));
 
             // Generate booking reference
-            $bookingReference = 'HUBER-' . strtoupper(uniqid());
+            $bookingReference = 'HUBER-' . strtoupper(bin2hex(random_bytes(8)));
 
             // Create the booking
             $ridePurchase = new RidePurchase;
@@ -539,7 +603,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function apiShowQRPayment(Request $request, $rideId, $tripType = 'go')
+    public function apiShowQRPayment(Request $request, $rideId, $tripType = 'go'): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();

@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Ride;
 use App\Models\RidePurchase;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class BookingController extends Controller
 {
-    public function showPaymentPage(Request $request, $rideId, $tripType = 'go')
+    public function showPaymentPage(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = auth()->user();
 
@@ -78,7 +80,7 @@ class BookingController extends Controller
         return redirect()->route('booking.seat-selection', ['rideId' => $rideId, 'tripType' => $tripType]);
     }
 
-    public function showSeatSelection($rideId, $tripType = 'go')
+    public function showSeatSelection($rideId, $tripType = 'go'): View|RedirectResponse
     {
         $user = auth()->user();
 
@@ -117,11 +119,11 @@ class BookingController extends Controller
         return view('booking.seat-selection', compact('ride', 'user', 'tripType', 'availableSeats', 'date', 'time', 'pricePerSeat', 'bookedSeats'));
     }
 
-    public function processSeatSelection(Request $request, $rideId, $tripType = 'go')
+    public function processSeatSelection(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = auth()->user();
 
-        $ride = Ride::find($rideId);
+        $ride = Ride::where('id', $rideId)->lockForUpdate()->first();
         if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
@@ -183,7 +185,7 @@ class BookingController extends Controller
             }
         }
 
-        // Check if selected seats are already booked
+        // Check if selected seats are already booked (inside lockForUpdate, so this is race-condition-free)
         $bookedSeats = RidePurchase::where('ride_id', $rideId)
             ->where('trip_type', $tripType)
             ->where('seats_confirmed', true)
@@ -234,7 +236,7 @@ class BookingController extends Controller
             ->with('success', 'Seats selected successfully! Please complete your payment.');
     }
 
-    public function processBooking(Request $request, $rideId, $tripType = 'go')
+    public function processBooking(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = auth()->user();
 
@@ -384,7 +386,7 @@ class BookingController extends Controller
             }
 
             // Generate booking reference
-            $bookingReference = 'BK' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
+            $bookingReference = 'BK' . date('Ymd') . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
 
             // Log booking details before creation
             Log::info('Creating booking', [
@@ -439,7 +441,7 @@ class BookingController extends Controller
         }
     }
 
-    public function showThankYou($bookingId)
+    public function showThankYou($bookingId): View|RedirectResponse
     {
         $user = auth()->user();
 
@@ -454,7 +456,7 @@ class BookingController extends Controller
         return view('booking.thank-you', compact('booking', 'user'));
     }
 
-    public function showConfirmation($bookingId)
+    public function showConfirmation($bookingId): View|RedirectResponse
     {
         $user = auth()->user();
 

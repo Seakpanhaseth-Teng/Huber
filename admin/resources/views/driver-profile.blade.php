@@ -23,19 +23,8 @@
                         </h3>
                     </div>
                     <div class="card-body p-4">
-                        @if(session('success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-
-                        @if(session('error'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
+                        <x-flash-message type="success" :dismissible="true" />
+                        <x-flash-message type="error" :dismissible="true" />
 
                         <!-- Legal Documents Section (Read-Only) -->
                         <h5 class="text-primary mb-3">

@@ -2,26 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class PasswordChangeController extends Controller
 {
-    public function show()
+    public function show(): View
     {
         $user = auth()->user();
 
         return view('change-password');
     }
 
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
         $user = auth()->user();
 
         // Validation
         $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
+            'new_password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
 
         // Check current password

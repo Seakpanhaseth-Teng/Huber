@@ -3,15 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class AdminUserController extends Controller
 {
     /**
      * Display a listing of users.
      */
-    public function index()
+    public function index(): View
     {
         $users = User::where('role', '!=', 'driver')
             ->orWhereNull('role')
@@ -24,20 +27,17 @@ class AdminUserController extends Controller
     /**
      * Show the form for creating a new user.
      */
-    public function create()
+    public function create(): View
     {
         return view('admin.users.create');
     }
 
-    /**
-     * Store a newly created user in storage.
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
             'phone' => 'nullable|string|max:20',
         ]);
 
@@ -56,17 +56,14 @@ class AdminUserController extends Controller
     /**
      * Show the form for editing the specified user.
      */
-    public function edit($id)
+    public function edit($id): View
     {
         $user = User::findOrFail($id);
 
         return view('admin.users.edit', compact('user'));
     }
 
-    /**
-     * Update the specified user in storage.
-     */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
         $user = User::findOrFail($id);
 
@@ -74,7 +71,7 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => ['nullable', 'string', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
 
         $user->update([
@@ -95,7 +92,7 @@ class AdminUserController extends Controller
     /**
      * Remove the specified user from storage.
      */
-    public function destroy($id)
+    public function destroy($id): RedirectResponse
     {
         $user = User::findOrFail($id);
         $user->delete();
@@ -107,7 +104,7 @@ class AdminUserController extends Controller
     /**
      * Display the specified user and related data.
      */
-    public function show($id)
+    public function show($id): View
     {
         $user = User::with(['ridePurchases.ride', 'rides'])->findOrFail($id);
         $today = now()->toDateString();

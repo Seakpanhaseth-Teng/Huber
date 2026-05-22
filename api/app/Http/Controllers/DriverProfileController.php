@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\DriverDocument;
 use App\Models\User;
 use App\Services\DriverStatsService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class DriverProfileController extends Controller
 {
@@ -17,7 +20,7 @@ class DriverProfileController extends Controller
         $this->driverStatsService = app(DriverStatsService::class);
     }
 
-    public function show()
+    public function show(): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -29,7 +32,7 @@ class DriverProfileController extends Controller
         return view('driver-profile', compact('user', 'driverDocuments'));
     }
 
-    public function updateVehiclePhotos(Request $request)
+    public function updateVehiclePhotos(Request $request): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -74,7 +77,7 @@ class DriverProfileController extends Controller
         return $updated;
     }
 
-    public function showPublic($driverId)
+    public function showPublic($driverId): View
     {
         $user = User::where('id', $driverId)->where('role', 'driver')->firstOrFail();
         $driverDocuments = DriverDocument::where('user_id', $user->id)->first();
@@ -99,7 +102,7 @@ class DriverProfileController extends Controller
     }
 
     // API Methods
-    public function apiShow(Request $request)
+    public function apiShow(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -114,7 +117,7 @@ class DriverProfileController extends Controller
         ]);
     }
 
-    public function apiUpdateVehiclePhotos(Request $request)
+    public function apiUpdateVehiclePhotos(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -149,7 +152,7 @@ class DriverProfileController extends Controller
         return $this->jsonError('No changes were made.', 400);
     }
 
-    public function apiShowPublic(Request $request, $driverId)
+    public function apiShowPublic(Request $request, $driverId): JsonResponse
     {
         $user = User::where('id', $driverId)->where('role', 'driver')->first();
         if (! $user) {

@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [\App\Http\Controllers\LoginController::class, 'apiLogin'])
     ->middleware('throttle:login');
 Route::post('/logout', [\App\Http\Controllers\LoginController::class, 'apiLogout']);
-Route::post('/register', [\App\Http\Controllers\RegisterController::class, 'apiRegister']);
-Route::post('/register-driver', [\App\Http\Controllers\RegisterController::class, 'apiRegisterDriver']);
-Route::post('/register-driver-docs', [\App\Http\Controllers\RegisterController::class, 'apiRegisterDriverDocs']);
+Route::post('/register', [\App\Http\Controllers\RegisterController::class, 'apiRegister'])->middleware('throttle:registration');
+Route::post('/register-driver', [\App\Http\Controllers\RegisterController::class, 'apiRegisterDriver'])->middleware('throttle:registration');
+Route::post('/register-driver-docs', [\App\Http\Controllers\RegisterController::class, 'apiRegisterDriverDocs'])->middleware('throttle:registration');
 
 // Home route
 Route::get('/', [\App\Http\Controllers\HomeController::class, 'apiIndex']);
@@ -21,7 +21,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     // Password change
     Route::get('/password/change', [\App\Http\Controllers\PasswordChangeController::class, 'apiShow']);
-    Route::put('/password/change', [\App\Http\Controllers\PasswordChangeController::class, 'apiUpdate']);
+    Route::put('/password/change', [\App\Http\Controllers\PasswordChangeController::class, 'apiUpdate'])->middleware('throttle:login');
 
     // Driver Profile routes
     Route::get('/driver/profile', [\App\Http\Controllers\DriverProfileController::class, 'apiShow']);
@@ -70,7 +70,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 });
 
 // Admin authentication (public)
-Route::post('/admin/login', [\App\Http\Controllers\AdminAuthController::class, 'apiLogin']);
+Route::post('/admin/login', [\App\Http\Controllers\AdminAuthController::class, 'apiLogin'])->middleware('throttle:login');
 Route::post('/admin/logout', [\App\Http\Controllers\AdminAuthController::class, 'apiLogout']);
 
 // Admin protected routes

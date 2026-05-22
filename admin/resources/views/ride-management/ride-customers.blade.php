@@ -362,9 +362,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge {{ $booking->trip_type === 'return' ? 'bg-warning' : 'bg-primary' }}">
-                                    {{ strtoupper($booking->trip_type) }}
-                                </span>
+                                <x-trip-badge :tripType="$booking->trip_type" />
                             </td>
                             <td>
                                 <span class="badge bg-info">{{ $booking->number_of_seats }} seat(s)</span>

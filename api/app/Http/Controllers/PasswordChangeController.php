@@ -3,17 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class PasswordChangeController extends Controller
 {
-    public function show()
+    public function show(): View
     {
         return view('change-password');
     }
 
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
         $user = auth()->user();
         if (! $user) {
@@ -23,7 +27,7 @@ class PasswordChangeController extends Controller
         // Validation
         $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
+            'new_password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
 
         // Check current password
@@ -39,7 +43,7 @@ class PasswordChangeController extends Controller
     }
 
     // API Methods
-    public function apiShow(Request $request)
+    public function apiShow(Request $request): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();
@@ -56,13 +60,13 @@ class PasswordChangeController extends Controller
             'data' => [
                 'form_fields' => [
                     'current_password' => 'required',
-                    'new_password' => 'required|min:8|confirmed',
+                    'new_password' => 'required|confirmed|min:8',
                 ],
             ],
         ]);
     }
 
-    public function apiUpdate(Request $request)
+    public function apiUpdate(Request $request): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();
@@ -76,7 +80,7 @@ class PasswordChangeController extends Controller
         // Validation
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
+            'new_password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
 
         if ($validator->fails()) {

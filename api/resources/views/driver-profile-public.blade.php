@@ -470,7 +470,7 @@
                                                     <h6 class="mb-1">{{ $review->user ? $review->user->name : 'Anonymous' }}</h6>
                                                     <small class="text-muted">
                                                         {{ $review->created_at->format('M d, Y') }}
-                                                        <span class="badge bg-info ms-2">{{ strtoupper($review->trip_type) }} TRIP</span>
+                                                        <x-trip-badge :tripType="$review->trip_type" />
                                                     </small>
                                                 </div>
                                             </div>

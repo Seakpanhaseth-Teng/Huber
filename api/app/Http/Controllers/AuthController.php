@@ -2,38 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function showLogin(): View
     {
         return view('login');
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
-        $request->session()->forget(['user', 'user_role']);
+        \Illuminate\Support\Facades\Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('home');
     }
 
-    public function showChooseRole()
+    public function showChooseRole(): View
     {
         return view('choose-role');
     }
 
-    public function showUserRegistration()
+    public function showUserRegistration(): View
     {
         return view('register');
     }
 
-    public function showDriverRegistration()
+    public function showDriverRegistration(): View
     {
         return view('register-driver');
     }
 
-    public function login(Request $request)
+    public function login(Request $request): RedirectResponse
     {
         $request->validate([
             'email' => 'required|email',
@@ -43,6 +48,8 @@ class AuthController extends Controller
         $user = \App\Models\User::where('email', $request->email)->first();
 
         if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+            $request->session()->regenerate();
+
             // Split name for session
             $nameParts = explode(' ', $user->name, 2);
             $firstName = $nameParts[0];
@@ -67,11 +74,12 @@ class AuthController extends Controller
         }
 
         // If we get here, login failed
+        \Illuminate\Support\Facades\Log::warning('Failed login attempt', ['email' => $request->email, 'ip' => $request->ip()]);
         return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
     }
 
     // API Methods
-    public function apiShowLogin()
+    public function apiShowLogin(): JsonResponse
     {
         return response()->json([
             'message' => 'Login form data',
@@ -85,7 +93,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function apiLogout(Request $request)
+    public function apiLogout(Request $request): JsonResponse
     {
         $request->session()->forget(['user', 'user_role']);
 
@@ -95,7 +103,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function apiShowChooseRole()
+    public function apiShowChooseRole(): JsonResponse
     {
         return response()->json([
             'message' => 'Choose registration role',
@@ -107,7 +115,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function apiShowUserRegistration()
+    public function apiShowUserRegistration(): JsonResponse
     {
         return response()->json([
             'message' => 'User registration form data',
@@ -125,7 +133,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function apiShowDriverRegistration()
+    public function apiShowDriverRegistration(): JsonResponse
     {
         return response()->json([
             'message' => 'Driver registration form data',
@@ -148,7 +156,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function apiLogin(Request $request)
+    public function apiLogin(Request $request): JsonResponse
     {
         $request->validate([
             'email' => 'required|email',
@@ -188,6 +196,7 @@ class AuthController extends Controller
             ]);
         }
 
+        \Illuminate\Support\Facades\Log::warning('Failed API login attempt', ['email' => $request->email, 'ip' => $request->ip()]);
         return response()->json([
             'message' => 'Invalid credentials',
             'status' => 'error',

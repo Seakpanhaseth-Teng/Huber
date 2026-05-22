@@ -11,13 +11,7 @@
                 <p class="text-muted">Share your experience and help other passengers</p>
             </div>
 
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px;">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
+            <x-flash-message type="error" :dismissible="true" />
 
             <!-- Booking Summary -->
             <div class="card shadow border-0 mb-4" style="border-radius: 18px;">

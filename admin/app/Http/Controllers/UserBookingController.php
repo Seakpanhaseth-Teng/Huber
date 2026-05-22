@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\RidePurchase;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class UserBookingController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $user = auth()->user();
 
@@ -18,7 +20,7 @@ class UserBookingController extends Controller
         return view('user.bookings', compact('user', 'bookings'));
     }
 
-    public function show($bookingId)
+    public function show($bookingId): View|RedirectResponse
     {
         $user = auth()->user();
 
@@ -36,7 +38,7 @@ class UserBookingController extends Controller
         return view($view, compact('booking', 'user'));
     }
 
-    public function printReceipt($bookingId)
+    public function printReceipt($bookingId): View|RedirectResponse
     {
         $user = auth()->user();
 

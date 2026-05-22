@@ -4,19 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\DriverDocument;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
-    public function apiRegister(Request $request)
+    public function apiRegister(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ]);
 
         $user = User::create([
@@ -36,14 +38,14 @@ class RegisterController extends Controller
         ]);
     }
 
-    public function apiRegisterDriver(Request $request)
+    public function apiRegisterDriver(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
             'license_number' => ['required', 'string', 'max:255'],
             'license_expiry' => ['required', 'date'],
             'vehicle_model' => ['required', 'string', 'max:255'],
@@ -73,9 +75,9 @@ class RegisterController extends Controller
         ]);
 
         // Store vehicle photos
-        $vehiclePhoto1Path = $request->file('vehicle_photo_1')->store('driver-documents', 'public');
-        $vehiclePhoto2Path = $request->file('vehicle_photo_2')->store('driver-documents', 'public');
-        $vehiclePhoto3Path = $request->file('vehicle_photo_3')->store('driver-documents', 'public');
+        $vehiclePhoto1Path = $request->file('vehicle_photo_1')->store('driver-documents', 'local');
+        $vehiclePhoto2Path = $request->file('vehicle_photo_2')->store('driver-documents', 'local');
+        $vehiclePhoto3Path = $request->file('vehicle_photo_3')->store('driver-documents', 'local');
 
         // Create driver document record with vehicle photos
         DriverDocument::create([
@@ -96,7 +98,7 @@ class RegisterController extends Controller
         ]);
     }
 
-    public function apiRegisterDriverDocs(Request $request)
+    public function apiRegisterDriverDocs(Request $request): JsonResponse
     {
         try {
             \Log::info('Driver docs upload request received', [
@@ -122,9 +124,9 @@ class RegisterController extends Controller
             $existingDocs = DriverDocument::where('user_id', $user->id)->first();
             if ($existingDocs) {
                 // Update existing record with legal documents
-                $driverLicensePath = $request->file('driver_license_file')->store('driver-documents', 'public');
-                $vehicleRegPath = $request->file('vehicle_registration_file')->store('driver-documents', 'public');
-                $insuranceCertPath = $request->file('insurance_certificate_file')->store('driver-documents', 'public');
+                $driverLicensePath = $request->file('driver_license_file')->store('driver-documents', 'local');
+                $vehicleRegPath = $request->file('vehicle_registration_file')->store('driver-documents', 'local');
+                $insuranceCertPath = $request->file('insurance_certificate_file')->store('driver-documents', 'local');
 
                 $existingDocs->update([
                     'driver_license_file' => $driverLicensePath,
@@ -136,9 +138,9 @@ class RegisterController extends Controller
                 \Log::info('Driver document record updated', ['document_id' => $existingDocs->id]);
             } else {
                 // Create new record
-                $driverLicensePath = $request->file('driver_license_file')->store('driver-documents', 'public');
-                $vehicleRegPath = $request->file('vehicle_registration_file')->store('driver-documents', 'public');
-                $insuranceCertPath = $request->file('insurance_certificate_file')->store('driver-documents', 'public');
+                $driverLicensePath = $request->file('driver_license_file')->store('driver-documents', 'local');
+                $vehicleRegPath = $request->file('vehicle_registration_file')->store('driver-documents', 'local');
+                $insuranceCertPath = $request->file('insurance_certificate_file')->store('driver-documents', 'local');
 
                 $driverDocument = DriverDocument::create([
                     'user_id' => $user->id,
@@ -164,9 +166,7 @@ class RegisterController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed: ' . implode(', ', array_map(function ($errors) {
-                    return implode(', ', $errors);
-                }, $e->errors())),
+                'message' => 'One or more fields failed validation.',
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {

@@ -9,19 +9,8 @@
         <h4 class="mb-0">Edit Ride</h4>
     </div>
     <div class="card-body bg-light" style="border-radius: 0 0 12px 12px;">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+        <x-flash-message type="success" :dismissible="true" />
+        <x-flash-message type="error" :dismissible="true" />
 
         @if($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">

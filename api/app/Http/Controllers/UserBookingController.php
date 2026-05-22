@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\RidePurchase;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class UserBookingController extends Controller
 {
-    public function index()
+    public function index(): View|RedirectResponse
     {
         $user = auth()->user();
         if (! $user) {
@@ -25,7 +28,7 @@ class UserBookingController extends Controller
         return view($view, compact('user', 'bookings'));
     }
 
-    public function show($bookingId)
+    public function show($bookingId): View|RedirectResponse
     {
         $user = auth()->user();
         if (! $user) {
@@ -46,7 +49,7 @@ class UserBookingController extends Controller
         return view($view, compact('booking', 'user'));
     }
 
-    public function printReceipt($bookingId)
+    public function printReceipt($bookingId): View|RedirectResponse
     {
         $user = auth()->user();
         if (! $user) {
@@ -68,7 +71,7 @@ class UserBookingController extends Controller
     }
 
     // API Methods
-    public function apiIndex(Request $request)
+    public function apiIndex(Request $request): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();
@@ -94,7 +97,7 @@ class UserBookingController extends Controller
         ]);
     }
 
-    public function apiShow(Request $request, $bookingId)
+    public function apiShow(Request $request, $bookingId): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();
@@ -127,7 +130,7 @@ class UserBookingController extends Controller
         ]);
     }
 
-    public function apiPrintReceipt(Request $request, $bookingId)
+    public function apiPrintReceipt(Request $request, $bookingId): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();

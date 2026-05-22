@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $stats = Cache::remember('dashboard_stats', 300, function () {
             return [
@@ -26,7 +28,7 @@ class AdminDashboardController extends Controller
         return view($view, $stats);
     }
 
-    public function apiIndex()
+    public function apiIndex(): JsonResponse
     {
         $stats = Cache::remember('dashboard_api_stats', 300, function () {
             /** @var object{total_users: int, total_drivers: int, total_verified_drivers: int} $userStats */

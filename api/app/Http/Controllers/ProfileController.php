@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    public function show()
+    public function show(): View|RedirectResponse
     {
         /** @var \App\Models\User|null $user */
         $user = auth()->user();
@@ -25,7 +28,7 @@ class ProfileController extends Controller
         return view('profile', compact('user', 'firstName', 'lastName'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
         /** @var \App\Models\User|null $user */
         $user = auth()->user();
@@ -117,7 +120,7 @@ class ProfileController extends Controller
     }
 
     // API Methods
-    public function apiShow(Request $request)
+    public function apiShow(Request $request): JsonResponse
     {
         // Get user from token authentication
         /** @var \App\Models\User|null $user */
@@ -146,7 +149,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function apiUpdate(Request $request)
+    public function apiUpdate(Request $request): JsonResponse
     {
         // Get user from token authentication
         $user = $request->user();

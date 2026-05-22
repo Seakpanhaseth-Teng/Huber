@@ -5,25 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class AdminRideController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $rides = Ride::with('driver')->paginate(10);
 
         return view('admin.rides.index', compact('rides'));
     }
 
-    public function create()
+    public function create(): View
     {
         $drivers = User::where('role', 'driver')->get();
 
         return view('admin.rides.create', compact('drivers'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -43,7 +45,7 @@ class AdminRideController extends Controller
         return redirect()->route('admin.rides.index')->with('success', 'Ride created successfully');
     }
 
-    public function edit($id)
+    public function edit($id): View
     {
         $ride = Ride::with('driver')->findOrFail($id);
         $drivers = User::where('role', 'driver')->get();
@@ -51,7 +53,7 @@ class AdminRideController extends Controller
         return view('admin.rides.edit', compact('ride', 'drivers'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
         $ride = Ride::findOrFail($id);
         $validated = $request->validate([
@@ -72,7 +74,7 @@ class AdminRideController extends Controller
         return redirect()->route('admin.rides.index')->with('success', 'Ride updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy($id): RedirectResponse
     {
         $ride = Ride::findOrFail($id);
         $ride->delete();
@@ -80,7 +82,7 @@ class AdminRideController extends Controller
         return redirect()->route('admin.rides.index')->with('success', 'Ride deleted successfully');
     }
 
-    public function passengers($id)
+    public function passengers($id): View
     {
         $ride = Ride::findOrFail($id);
         $bookings = RidePurchase::with('user')->where('ride_id', $id)->get();

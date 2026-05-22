@@ -6,9 +6,11 @@ use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Models\User;
 
+use Illuminate\View\View;
+
 class AdminDashboardController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $totalUsers = User::count();
         $totalDrivers = User::where('role', 'driver')->count();

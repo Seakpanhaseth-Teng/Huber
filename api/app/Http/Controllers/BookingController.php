@@ -7,8 +7,11 @@ use App\Models\RidePurchase;
 use App\Services\BookingService;
 use App\Services\RidePricingService;
 use App\Services\SeatAvailabilityService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class BookingController extends Controller
 {
@@ -25,7 +28,7 @@ class BookingController extends Controller
         $this->bookingService = app(BookingService::class);
     }
 
-    public function showPaymentPage(Request $request, $rideId, $tripType = 'go')
+    public function showPaymentPage(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -62,7 +65,7 @@ class BookingController extends Controller
         return redirect()->route('booking.seat-selection', ['rideId' => $rideId, 'tripType' => $tripType]);
     }
 
-    public function showSeatSelection($rideId, $tripType = 'go')
+    public function showSeatSelection($rideId, $tripType = 'go'): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -91,14 +94,14 @@ class BookingController extends Controller
             ->with('pricePerSeat', $pricing['price_per_seat']);
     }
 
-    public function processSeatSelection(Request $request, $rideId, $tripType = 'go')
+    public function processSeatSelection(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
             return $this->webRedirectLogin();
         }
 
-        $ride = Ride::find($rideId);
+        $ride = Ride::where('id', $rideId)->lockForUpdate()->first();
         if (! $ride) {
             return redirect()->route('find.rides')->with('error', 'Ride not found.');
         }
@@ -172,7 +175,7 @@ class BookingController extends Controller
             ->with('success', 'Seats selected successfully! Please complete your payment.');
     }
 
-    public function processBooking(Request $request, $rideId, $tripType = 'go')
+    public function processBooking(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -268,7 +271,7 @@ class BookingController extends Controller
         }
     }
 
-    public function showThankYou($bookingId)
+    public function showThankYou($bookingId): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -289,7 +292,7 @@ class BookingController extends Controller
         return view($view, compact('booking', 'user'));
     }
 
-    public function showConfirmation($bookingId)
+    public function showConfirmation($bookingId): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -311,7 +314,7 @@ class BookingController extends Controller
     }
 
     // API Methods
-    public function apiFindRides(Request $request)
+    public function apiFindRides(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -332,7 +335,7 @@ class BookingController extends Controller
         }
     }
 
-    public function apiShowPaymentPage(Request $request, $rideId, $tripType = 'go')
+    public function apiShowPaymentPage(Request $request, $rideId, $tripType = 'go'): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -362,7 +365,7 @@ class BookingController extends Controller
         ]);
     }
 
-    public function apiShowSeatSelection($rideId, $tripType = 'go')
+    public function apiShowSeatSelection($rideId, $tripType = 'go'): JsonResponse
     {
         $user = request()->user();
         if (! $user) {
@@ -394,14 +397,14 @@ class BookingController extends Controller
         ]);
     }
 
-    public function apiProcessSeatSelection(Request $request, $rideId, $tripType = 'go')
+    public function apiProcessSeatSelection(Request $request, $rideId, $tripType = 'go'): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
             return $this->jsonError('Please login to book a ride.', 401);
         }
 
-        $ride = Ride::find($rideId);
+        $ride = Ride::where('id', $rideId)->lockForUpdate()->first();
         if (! $ride) {
             return $this->jsonError('Ride not found.', 404);
         }
@@ -461,7 +464,7 @@ class BookingController extends Controller
         ]);
     }
 
-    public function apiProcessBooking(Request $request, $rideId, $tripType = 'go')
+    public function apiProcessBooking(Request $request, $rideId, $tripType = 'go'): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -518,7 +521,7 @@ class BookingController extends Controller
         }
     }
 
-    public function apiShowThankYou($bookingId)
+    public function apiShowThankYou($bookingId): JsonResponse
     {
         $user = request()->user();
         if (! $user) {
@@ -536,7 +539,7 @@ class BookingController extends Controller
         ]);
     }
 
-    public function apiShowConfirmation($bookingId)
+    public function apiShowConfirmation($bookingId): JsonResponse
     {
         $user = request()->user();
         if (! $user) {

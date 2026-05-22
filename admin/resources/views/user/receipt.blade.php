@@ -189,9 +189,7 @@
                     <div class="info-row">
                         <span class="info-label">Trip Type:</span>
                         <span class="info-value">
-                            <span class="badge {{ $booking->trip_type === 'return' ? 'bg-warning' : 'bg-primary' }}">
-                                {{ strtoupper($booking->trip_type) }} TRIP
-                            </span>
+                            <x-trip-badge :tripType="$booking->trip_type" />
                         </span>
                     </div>
                     <div class="info-row">

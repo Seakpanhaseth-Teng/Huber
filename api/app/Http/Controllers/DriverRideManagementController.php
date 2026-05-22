@@ -6,7 +6,10 @@ use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Services\RidePricingService;
 use App\Services\RideValidationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class DriverRideManagementController extends Controller
 {
@@ -20,7 +23,7 @@ class DriverRideManagementController extends Controller
         $this->rideValidationService = app(RideValidationService::class);
     }
 
-    public function index(Request $request)
+    public function index(Request $request): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -47,7 +50,7 @@ class DriverRideManagementController extends Controller
         return view($view, compact('user', 'goRides', 'returnRides'));
     }
 
-    public function create()
+    public function create(): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -59,7 +62,7 @@ class DriverRideManagementController extends Controller
         return view($view, compact('user'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -79,7 +82,7 @@ class DriverRideManagementController extends Controller
         return redirect()->route('driver.ride.management')->with('success', 'Ride created successfully!');
     }
 
-    public function myRides(Request $request)
+    public function myRides(Request $request): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -91,7 +94,7 @@ class DriverRideManagementController extends Controller
         return view($view, compact('user'));
     }
 
-    public function edit($rideId)
+    public function edit($rideId): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -108,7 +111,7 @@ class DriverRideManagementController extends Controller
         return view($view, compact('user', 'ride'));
     }
 
-    public function update(Request $request, $rideId)
+    public function update(Request $request, $rideId): RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -133,8 +136,8 @@ class DriverRideManagementController extends Controller
                 'return_is_exclusive' => 'required|boolean',
                 'return_price_per_person' => 'nullable|numeric|min:0',
                 'return_exclusive_price' => 'nullable|numeric|min:0',
-                'return_station_location_map_url' => 'nullable|url|max:255',
-                'return_destination_map_url' => 'nullable|url|max:255',
+                'return_station_location_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+                'return_destination_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
             ]);
 
             $validated = array_merge($validated, $returnValidation);
@@ -170,7 +173,7 @@ class DriverRideManagementController extends Controller
         return redirect()->route('driver.my-rides')->with('success', 'Ride updated successfully!');
     }
 
-    public function findRides(Request $request)
+    public function findRides(Request $request): View
     {
         $user = auth()->user();
         $userId = $user?->id;
@@ -335,7 +338,7 @@ class DriverRideManagementController extends Controller
         ]);
     }
 
-    public function earnings(Request $request)
+    public function earnings(Request $request): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -372,7 +375,7 @@ class DriverRideManagementController extends Controller
         return view($view, compact('user', 'bookings', 'totalEarnings', 'totalCustomers', 'totalRidesCompleted'));
     }
 
-    public function showRideCustomers($rideId, $tripType = null)
+    public function showRideCustomers($rideId, $tripType = null): View|RedirectResponse
     {
         $user = $this->getWebUser();
         if (! $user) {
@@ -452,7 +455,7 @@ class DriverRideManagementController extends Controller
     }
 
     // API Methods
-    public function apiIndex(Request $request)
+    public function apiIndex(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -481,7 +484,7 @@ class DriverRideManagementController extends Controller
         ]);
     }
 
-    public function apiCreate(Request $request)
+    public function apiCreate(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -504,10 +507,10 @@ class DriverRideManagementController extends Controller
                 'return_time' => 'nullable',
                 'return_available_seats' => 'nullable|integer',
                 'return_is_exclusive' => 'nullable|boolean',
-                'station_location_map_url' => 'nullable|url|max:255',
-                'destination_map_url' => 'nullable|url|max:255',
-                'return_station_location_map_url' => 'nullable|url|max:255',
-                'return_destination_map_url' => 'nullable|url|max:255',
+                'station_location_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+                'destination_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+                'return_station_location_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
+                'return_destination_map_url' => 'nullable|url|max:255|regex:/^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)/i',
                 'go_to_price_per_person' => 'nullable|numeric|min:0',
                 'go_to_exclusive_price' => 'nullable|numeric|min:0',
                 'return_price_per_person' => 'nullable|numeric|min:0',
@@ -516,7 +519,7 @@ class DriverRideManagementController extends Controller
         ]);
     }
 
-    public function apiStore(Request $request)
+    public function apiStore(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -548,7 +551,7 @@ class DriverRideManagementController extends Controller
         return $this->jsonSuccess('Ride created successfully!', ['ride' => $ride]);
     }
 
-    public function apiMyRides(Request $request)
+    public function apiMyRides(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -563,7 +566,7 @@ class DriverRideManagementController extends Controller
         return $this->jsonPaginated('My rides retrieved successfully', $rides);
     }
 
-    public function apiEdit(Request $request, $rideId)
+    public function apiEdit(Request $request, $rideId): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -581,7 +584,7 @@ class DriverRideManagementController extends Controller
         ]);
     }
 
-    public function apiUpdate(Request $request, $rideId)
+    public function apiUpdate(Request $request, $rideId): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -616,7 +619,7 @@ class DriverRideManagementController extends Controller
         return $this->jsonSuccess('Ride updated successfully!', ['ride' => $ride]);
     }
 
-    public function apiFindRides(Request $request)
+    public function apiFindRides(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -633,7 +636,7 @@ class DriverRideManagementController extends Controller
         return $this->jsonPaginated('Available rides found successfully', $rides);
     }
 
-    public function apiEarnings(Request $request)
+    public function apiEarnings(Request $request): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {
@@ -663,7 +666,7 @@ class DriverRideManagementController extends Controller
         ]);
     }
 
-    public function apiShowRideCustomers(Request $request, $rideId, $tripType = null)
+    public function apiShowRideCustomers(Request $request, $rideId, $tripType = null): JsonResponse
     {
         $user = $this->getApiUser($request);
         if (! $user) {

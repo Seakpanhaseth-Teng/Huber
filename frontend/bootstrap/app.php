@@ -13,9 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'admin.auth' => \App\Http\Middleware\AdminAuthenticate::class,
             'driver.verified' => \App\Http\Middleware\CheckDriverVerification::class,
         ]);
+
+        $middleware->appendToGroup('web', \App\Http\Middleware\SecurityHeadersMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

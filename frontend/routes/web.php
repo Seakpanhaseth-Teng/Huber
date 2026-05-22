@@ -10,7 +10,6 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RideCompletionController;
 use App\Http\Controllers\UserBookingController;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -102,7 +101,7 @@ Route::middleware('auth')->group(function () {
 
     // Password change routes
     Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
-    Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.submit');
+    Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.submit')->middleware('throttle:login');
 
     // Stubs for navbar links
     Route::get('/rides', function () {

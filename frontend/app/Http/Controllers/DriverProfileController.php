@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\DriverDocument;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class DriverProfileController extends Controller
 {
-    public function show()
+    public function show(): View
     {
         $user = auth()->user();
 
@@ -17,7 +19,7 @@ class DriverProfileController extends Controller
         return view('driver-profile', compact('user', 'driverDocuments'));
     }
 
-    public function updateVehiclePhotos(Request $request)
+    public function updateVehiclePhotos(Request $request): RedirectResponse
     {
         $user = auth()->user();
 
@@ -74,7 +76,7 @@ class DriverProfileController extends Controller
         return redirect()->back()->with('info', 'No changes were made.');
     }
 
-    public function showPublic($driverId)
+    public function showPublic($driverId): View
     {
         $user = \App\Models\User::where('id', $driverId)->where('role', 'driver')->firstOrFail();
         $driverDocuments = \App\Models\DriverDocument::where('user_id', $user->id)->first();

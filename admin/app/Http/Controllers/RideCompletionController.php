@@ -5,16 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Models\RideReview;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class RideCompletionController extends Controller
 {
     /**
      * Mark a ride as ongoing (driver action)
      */
-    public function markAsOngoing(Request $request, $rideId, $tripType = 'go')
+    public function markAsOngoing(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
+        if (! in_array($tripType, ['go', 'return'], true)) {
+            return redirect()->route('driver.ride.management')->with('error', 'Invalid trip type.');
+        }
+
         $user = auth()->user();
 
         $ride = Ride::where('id', $rideId)
@@ -51,8 +57,12 @@ class RideCompletionController extends Controller
     /**
      * Mark a ride as completed (driver action)
      */
-    public function markAsCompleted(Request $request, $rideId, $tripType = 'go')
+    public function markAsCompleted(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
+        if (! in_array($tripType, ['go', 'return'], true)) {
+            return redirect()->route('driver.ride.management')->with('error', 'Invalid trip type.');
+        }
+
         $user = auth()->user();
 
         $ride = Ride::where('id', $rideId)
@@ -91,8 +101,12 @@ class RideCompletionController extends Controller
     /**
      * Show review form for a completed ride
      */
-    public function showReviewForm($bookingId, $tripType = 'go')
+    public function showReviewForm($bookingId, $tripType = 'go'): View|RedirectResponse
     {
+        if (! in_array($tripType, ['go', 'return'], true)) {
+            return redirect()->route('user.bookings')->with('error', 'Invalid trip type.');
+        }
+
         $user = auth()->user();
 
         $booking = RidePurchase::with(['ride'])
@@ -132,8 +146,12 @@ class RideCompletionController extends Controller
     /**
      * Submit a review
      */
-    public function submitReview(Request $request, $bookingId, $tripType = 'go')
+    public function submitReview(Request $request, $bookingId, $tripType = 'go'): RedirectResponse
     {
+        if (! in_array($tripType, ['go', 'return'], true)) {
+            return redirect()->route('user.bookings')->with('error', 'Invalid trip type.');
+        }
+
         $user = auth()->user();
 
         $booking = RidePurchase::with(['ride'])
@@ -197,7 +215,7 @@ class RideCompletionController extends Controller
     /**
      * View reviews for a ride (driver view)
      */
-    public function viewRideReviews($rideId)
+    public function viewRideReviews($rideId): View|RedirectResponse
     {
         $user = auth()->user();
 
@@ -216,7 +234,7 @@ class RideCompletionController extends Controller
     /**
      * View all reviews for a driver (all rides)
      */
-    public function viewAllReviews()
+    public function viewAllReviews(): View
     {
         $user = auth()->user();
 

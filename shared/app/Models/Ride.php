@@ -73,9 +73,4 @@ class Ride extends Model
     {
         return $this->hasMany(RideReview::class);
     }
-
-    public function vehicle(): BelongsTo
-    {
-        return $this->belongsTo(Vehicle::class);
-    }
 }

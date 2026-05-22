@@ -22,11 +22,16 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
+        $adminPassword = env('ADMIN_PASSWORD');
+        if (! $adminPassword) {
+            throw new \RuntimeException('ADMIN_PASSWORD environment variable must be set to seed the admin account.');
+        }
+
         Admin::updateOrCreate(
             ['email' => env('ADMIN_EMAIL', 'admin@gmail.com')],
             [
                 'name' => 'Tiker',
-                'password' => Hash::make(env('ADMIN_PASSWORD', 'admin123')),
+                'password' => Hash::make($adminPassword),
             ]
         );
     }

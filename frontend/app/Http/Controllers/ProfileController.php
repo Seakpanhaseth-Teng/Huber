@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    public function show()
+    public function show(): View
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
@@ -22,7 +24,7 @@ class ProfileController extends Controller
         return view('profile', compact('user', 'firstName', 'lastName'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();

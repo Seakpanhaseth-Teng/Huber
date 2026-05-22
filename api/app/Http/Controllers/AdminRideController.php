@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Ride;
 use App\Models\RidePurchase;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class AdminRideController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $rides = Ride::with('driver')->paginate(10);
 
@@ -18,7 +21,7 @@ class AdminRideController extends Controller
         return view($view, compact('rides'));
     }
 
-    public function create()
+    public function create(): View
     {
         $drivers = User::where('role', 'driver')->get();
 
@@ -27,7 +30,7 @@ class AdminRideController extends Controller
         return view($view, compact('drivers'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -47,7 +50,7 @@ class AdminRideController extends Controller
         return redirect()->route('admin.rides.index')->with('success', 'Ride created successfully');
     }
 
-    public function edit($id)
+    public function edit($id): View
     {
         $ride = Ride::with('driver')->findOrFail($id);
         $drivers = User::where('role', 'driver')->get();
@@ -57,7 +60,7 @@ class AdminRideController extends Controller
         return view($view, compact('ride', 'drivers'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
         $ride = Ride::findOrFail($id);
         $validated = $request->validate([
@@ -78,7 +81,7 @@ class AdminRideController extends Controller
         return redirect()->route('admin.rides.index')->with('success', 'Ride updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy($id): RedirectResponse
     {
         $ride = Ride::findOrFail($id);
         $ride->delete();
@@ -86,7 +89,7 @@ class AdminRideController extends Controller
         return redirect()->route('admin.rides.index')->with('success', 'Ride deleted successfully');
     }
 
-    public function passengers($id)
+    public function passengers($id): View
     {
         $ride = Ride::findOrFail($id);
         $bookings = RidePurchase::with('user')->where('ride_id', $id)->get();
@@ -97,7 +100,7 @@ class AdminRideController extends Controller
     }
 
     // API: List rides
-    public function apiIndex()
+    public function apiIndex(): JsonResponse
     {
         $rides = Ride::with('driver')->paginate(10);
 
@@ -108,7 +111,7 @@ class AdminRideController extends Controller
     }
 
     // API: Create ride
-    public function apiStore(Request $request)
+    public function apiStore(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -131,7 +134,7 @@ class AdminRideController extends Controller
     }
 
     // API: Show ride
-    public function apiShow($id)
+    public function apiShow($id): JsonResponse
     {
         $ride = Ride::with('driver')->findOrFail($id);
 
@@ -142,7 +145,7 @@ class AdminRideController extends Controller
     }
 
     // API: Update ride
-    public function apiUpdate(Request $request, $id)
+    public function apiUpdate(Request $request, $id): JsonResponse
     {
         $ride = Ride::findOrFail($id);
         $validated = $request->validate([
@@ -166,7 +169,7 @@ class AdminRideController extends Controller
     }
 
     // API: Delete ride
-    public function apiDestroy($id)
+    public function apiDestroy($id): JsonResponse
     {
         $ride = Ride::findOrFail($id);
         $ride->delete();
@@ -178,7 +181,7 @@ class AdminRideController extends Controller
     }
 
     // API: List passengers for a ride
-    public function apiPassengers($id)
+    public function apiPassengers($id): JsonResponse
     {
         $ride = Ride::findOrFail($id);
         $bookings = RidePurchase::with('user')->where('ride_id', $id)->get();

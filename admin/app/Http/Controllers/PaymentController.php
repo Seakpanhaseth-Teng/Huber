@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Ride;
 use App\Models\RidePurchase;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
-    public function showPaymentPage(Request $request, $rideId, $tripType = 'go')
+    public function showPaymentPage(Request $request, $rideId, $tripType = 'go'): View|RedirectResponse
     {
         $user = auth()->user();
 
@@ -72,7 +74,7 @@ class PaymentController extends Controller
         ));
     }
 
-    public function processPayment(Request $request, $rideId, $tripType = 'go')
+    public function processPayment(Request $request, $rideId, $tripType = 'go'): RedirectResponse
     {
         $user = auth()->user();
 
@@ -117,6 +119,21 @@ class PaymentController extends Controller
 
         $paymentMethod = $request->input('payment_method');
 
+        // Re-validate booking data integrity (not exclusive rides may have auto-generated data above)
+        if (! isset($bookingData['selected_seats']) || ! isset($bookingData['passenger_details'])) {
+            return redirect()->route('find.rides')->with('error', 'Invalid booking data. Please start your booking again.');
+        }
+
+        // Prevent double-booking: check user hasn't already booked this ride
+        $existingBooking = RidePurchase::where('ride_id', $rideId)
+            ->where('user_id', $user->id)
+            ->where('trip_type', $tripType)
+            ->where('seats_confirmed', true)
+            ->exists();
+        if ($existingBooking) {
+            return redirect()->route('user.bookings')->with('error', 'You have already booked this ride.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -143,13 +160,44 @@ class PaymentController extends Controller
 
             // Re-check seat availability after acquiring the lock
             $numberOfSeats = (int) ($bookingData['number_of_seats'] ?? 0);
-            if ($availableSeats <= 0 || $numberOfSeats > $availableSeats) {
+            if ($numberOfSeats < 1 || $availableSeats <= 0 || $numberOfSeats > $availableSeats) {
                 DB::rollBack();
 
                 return redirect()->route('find.rides')->with('error', 'Not enough seats available.');
             }
 
-            // Calculate total price
+            // Re-check no double-booking inside the transaction (TOCTOU guard)
+            $alreadyBooked = RidePurchase::where('ride_id', $rideId)
+                ->where('user_id', $user->id)
+                ->where('trip_type', $tripType)
+                ->where('seats_confirmed', true)
+                ->exists();
+            if ($alreadyBooked) {
+                DB::rollBack();
+                return redirect()->route('user.bookings')->with('error', 'You have already booked this ride.');
+            }
+
+            // Re-check that selected seats have not been taken since the session was created
+            $bookedSeats = RidePurchase::where('ride_id', $rideId)
+                ->where('trip_type', $tripType)
+                ->where('seats_confirmed', true)
+                ->pluck('selected_seats')
+                ->flatten()
+                ->filter()
+                ->toArray();
+            $conflictingSeats = array_intersect($bookingData['selected_seats'], $bookedSeats);
+            if (! empty($conflictingSeats)) {
+                DB::rollBack();
+                return redirect()->route('find.rides')->with('error', 'Some selected seats are no longer available. Please start your booking again.');
+            }
+
+            // Validate passenger_details count matches number_of_seats
+            if (count($bookingData['passenger_details']) !== $numberOfSeats) {
+                DB::rollBack();
+                return redirect()->route('find.rides')->with('error', 'Booking data is inconsistent. Please start your booking again.');
+            }
+
+            // Calculate total price (derived from DB, not session — safe)
             $totalPrice = $ride->is_exclusive || ($tripType === 'return' && $ride->return_is_exclusive) ? $pricePerSeat : ($pricePerSeat * $numberOfSeats);
 
             // Generate a simulated payment reference
@@ -163,7 +211,7 @@ class PaymentController extends Controller
             ];
 
             // Generate booking reference
-            $bookingReference = 'BK' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
+            $bookingReference = 'BK' . date('Ymd') . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
 
             // Create the booking
             $booking = RidePurchase::create(array_merge([
@@ -215,7 +263,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function showQRPayment(Request $request, $rideId, $tripType = 'go')
+    public function showQRPayment(Request $request, $rideId, $tripType = 'go'): View|RedirectResponse
     {
         $user = auth()->user();
 
