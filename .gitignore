@@ -35,6 +35,9 @@ auth.json
 
 # Fleet
 /.fleet
+
+# OpenCode
+.omo/
 /.nova
 /.zed
 .phpactor.json

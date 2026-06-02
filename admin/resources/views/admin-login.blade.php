@@ -1,11 +1,11 @@
 @extends('layouts.blank')
 @section('title', 'Admin Login')
 @section('content')
-<div class="container d-flex align-items-center justify-content-center min-vh-100" style="background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);">
+<div class="container d-flex align-items-center justify-content-center min-vh-100" style="background: linear-gradient(135deg, #E06810 0%, #1E3A5F 100%);">
     <div class="col-md-6 col-lg-5 mx-auto">
-        <div class="card shadow-lg border-0 rounded-4">
-            <div class="card-header bg-primary text-white text-center rounded-top-4">
-                <h3 class="mb-0"><i class="fas fa-user-shield me-2"></i>Admin Login</h3>
+        <div class="card shadow-lg border-0 rounded-4" style="background: #FFFAF5;">
+            <div class="card-header text-white text-center rounded-top-4" style="background: #E06810;">
+                <h3 class="mb-0"><i class="fas fa-car me-2"></i>Huber Admin</h3>
             </div>
             <div class="card-body p-4">
                 @if($errors->any())
@@ -42,9 +42,11 @@
     </div>
 </div>
 <style>
-    body { background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%) !important; }
+    body { background: linear-gradient(135deg, #E06810 0%, #1E3A5F 100%) !important; }
     .card { border-radius: 1.5rem !important; }
     .card-header { border-radius: 1.5rem 1.5rem 0 0 !important; }
     .btn-primary { font-weight: 600; letter-spacing: 0.5px; }
+    .form-control:focus { border-color: #E06810 !important; box-shadow: 0 0 0 2px rgba(224, 104, 16, 0.1) !important; }
+    a.text-primary { color: #E06810 !important; }
 </style>
 @endsection 

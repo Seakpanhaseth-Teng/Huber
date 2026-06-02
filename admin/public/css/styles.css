@@ -1,12 +1,17 @@
 /* Global Styles */
 :root {
-    --primary-color: #4C84FF;
-    --secondary-color: #6C757D;
-    --dark-color: #2C3E50;
-    --light-color: #F8F9FA;
-    --success-color: #2ECC71;
-    --warning-color: #F1C40F;
-    --danger-color: #E74C3C;
+    --primary-color: #E06810;
+    --primary-light: #FDE6D4;
+    --primary-dark: #A84D08;
+    --dark-color: #1E3A5F;
+    --dark-light: #E8EDF3;
+    --bg-warm: #FFFAF5;
+    --surface: #FFFFFF;
+    --muted: #6B7280;
+    --border-color: #E5E0D8;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
 }
 
 body {
@@ -66,7 +71,7 @@ body {
 }
 
 .dropdown-item:hover {
-    background-color: var(--light-color);
+    background-color: var(--dark-light);
     color: var(--primary-color);
 }
 
@@ -129,7 +134,7 @@ body {
 .icon-wrapper {
     width: 80px;
     height: 80px;
-    background: var(--light-color);
+    background: var(--primary-light);
     border-radius: 50%;
     display: flex;
     align-items: center;
