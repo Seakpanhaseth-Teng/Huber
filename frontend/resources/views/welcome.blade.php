@@ -1,23 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-blue-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded shadow-md w-full max-w-md text-center">
+@extends('layouts.app')
+
+@section('title', 'Welcome')
+
+@section('content')
+<div class="min-h-screen bg-brand-warm flex items-center justify-center py-12 px-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-brand-border p-8 w-full max-w-md mx-auto text-center">
         @php use Illuminate\Support\Facades\Auth; @endphp
         @if(Auth::check())
-            <p class="text-xl mb-4">Welcome, {{ Auth::user()->name }}!</p>
+            <p class="text-xl text-brand-navy font-semibold mb-6">Welcome, {{ Auth::user()->name }}!</p>
             <form method="POST" action="/logout">
                 @csrf
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Logout</button>
+                <button type="submit" class="bg-brand-amber hover:bg-brand-amber-600 text-white font-semibold py-3 px-6 rounded-brand transition">Logout</button>
             </form>
         @else
-            <a href="/login" class="text-blue-500 hover:underline">Login</a>
+            <a href="/login" class="text-brand-amber hover:text-brand-amber-600 hover:underline font-medium">Login</a>
         @endif
     </div>
-</body>
-</html> 
+</div>
+@endsection

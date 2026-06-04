@@ -1,55 +1,39 @@
-<footer class="footer py-4">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-4">
-                <h5>About Huber</h5>
-                <p>Modern ride-sharing platform connecting passengers with trusted drivers for safe and affordable
-                    travel.</p>
+<footer class="bg-brand-navy text-white/80 py-12 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-8">
+            <div class="col-span-2">
+                <h5 class="text-white font-semibold text-lg mb-3">About Huber</h5>
+                <p class="text-white/70 leading-relaxed">Modern ride-sharing platform connecting passengers with trusted drivers for safe and affordable travel.</p>
             </div>
-            <div class="col-lg-2">
-                <h5>Company</h5>
-                <ul class="list-unstyled">
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Careers</a></li>
-                    <li><a href="#">Press</a></li>
-                    <li><a href="#">Blog</a></li>
+            <div>
+                <h5 class="text-white font-semibold mb-3">Company</h5>
+                <ul class="list-none space-y-2">
+                    <li><a href="#" class="text-white/70 no-underline hover:text-brand-amber transition-colors">About Us</a></li>
+                    <li><a href="#" class="text-white/70 no-underline hover:text-brand-amber transition-colors">Careers</a></li>
+                    <li><a href="#" class="text-white/70 no-underline hover:text-brand-amber transition-colors">Press</a></li>
+                    <li><a href="#" class="text-white/70 no-underline hover:text-brand-amber transition-colors">Blog</a></li>
                 </ul>
             </div>
-            <div class="col-lg-2">
-                <h5>Support</h5>
-                <ul class="list-unstyled">
-                    <li><a href="#">Help Center</a></li>
-                    <li><a href="#">Safety</a></li>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">COVID-19</a></li>
+            <div>
+                <h5 class="text-white font-semibold mb-3">Support</h5>
+                <ul class="list-none space-y-2">
+                    <li><a href="#" class="text-white/70 no-underline hover:text-brand-amber transition-colors">Help Center</a></li>
+                    <li><a href="#" class="text-white/70 no-underline hover:text-brand-amber transition-colors">Safety</a></li>
+                    <li><a href="#" class="text-white/70 no-underline hover:text-brand-amber transition-colors">Contact Us</a></li>
                 </ul>
             </div>
-            <div class="col-lg-2">
-                <h5>Legal</h5>
-                <ul class="list-unstyled">
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Cookie Policy</a></li>
-                    <li><a href="#">Accessibility</a></li>
-                </ul>
-            </div>
-            <div class="col-lg-2">
-                <h5>Connect</h5>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-linkedin"></i></a>
+            <div>
+                <h5 class="text-white font-semibold mb-3">Connect</h5>
+                <div class="flex gap-3 text-xl">
+                    <a href="#" class="text-white/70 hover:text-brand-amber transition-colors"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-white/70 hover:text-brand-amber transition-colors"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white/70 hover:text-brand-amber transition-colors"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-white/70 hover:text-brand-amber transition-colors"><i class="fab fa-linkedin"></i></a>
                 </div>
             </div>
         </div>
-        <div class="row mt-4">
-            <div class="col-12">
-                <hr>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <p class="mb-0">&copy; 2024 Huber. All rights reserved.</p>
-                </div>
-            </div>
+        <div class="border-t border-white/10 mt-8 pt-6 text-center text-white/60 text-sm">
+            &copy; {{ date('Y') }} Huber. All rights reserved.
         </div>
     </div>
 </footer>

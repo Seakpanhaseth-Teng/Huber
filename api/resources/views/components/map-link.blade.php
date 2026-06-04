@@ -1,4 +1,4 @@
-@props(['mapUrl' => '', 'location' => '', 'class' => 'btn btn-sm btn-outline-primary mt-1 ms-4'])
+@props(['mapUrl' => '', 'location' => '', 'class' => 'inline-flex items-center gap-1 text-sm font-medium text-brand-amber hover:text-brand-amber-600 mt-1 ms-4'])
 
 @php
     $href = $mapUrl ?: 'https://maps.google.com/?q=' . urlencode($location);

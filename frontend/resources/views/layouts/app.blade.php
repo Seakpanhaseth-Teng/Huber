@@ -4,36 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Default Title')</title>
-    <!-- Include CSS files -->
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <title>@yield('title', 'Huber')</title>
+    @vite(['resources/css/app.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     @yield('style')
 </head>
 
-<body>
+<body class="bg-brand-warm text-brand-navy min-h-screen flex flex-col">
     <!-- Navbar -->
     @include('layouts.partials.navbar')
 
     <!-- Main Content -->
-    <div class="content">
+    <main class="flex-1">
+        @if(session('success'))
+            <div class="alert border border-brand-amber-light bg-brand-amber-light/20 text-brand-amber-dark rounded-lg px-4 py-3 mx-4 mt-4 flex items-center gap-2" role="alert">
+                <i class="fas fa-check-circle text-brand-amber"></i>
+                <span>{{ session('success') }}</span>
+                <button type="button" class="ml-auto text-brand-navy hover:text-brand-amber cursor-pointer" data-dismiss="alert">&times;</button>
+            </div>
+        @endif
+        @if($errors->any())
+            <div class="alert border border-red-300 bg-red-50 text-red-700 rounded-lg px-4 py-3 mx-4 mt-4" role="alert">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                @foreach($errors->all() as $error)
+                    {{ $error }}<br>
+                @endforeach
+            </div>
+        @endif
         @yield('content')
-    </div>
+    </main>
 
     <!-- Footer -->
     @include('layouts.partials.footer')
 
-    <!-- Include JS files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        AOS.init({
-            duration: 800,
-            once: true
-        });
-    </script>
+    @vite(['resources/js/app.js'])
     @yield('scripts')
 </body>
 

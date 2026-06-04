@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Huber')</title>
+    <title>@yield('title', 'Huber API')</title>
     @vite(['resources/css/app.css'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-51n8xEQG7E5szF60R3A69f5P1Q8kBp/WmDZ3jF36w3C1amYLO2o1Mvx8MwO7lH4e2QTh0kTEHnYJ4X2CYbH4w==" crossorigin="anonymous">
     @yield('head')
 </head>
 <body class="bg-brand-warm text-brand-navy min-h-screen">

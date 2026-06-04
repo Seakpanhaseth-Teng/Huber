@@ -254,11 +254,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add some visual feedback
     const qrCode = document.getElementById('qr-code');
     qrCode.addEventListener('load', function() {
-        console.log('QR code loaded successfully');
+        // QR loaded successfully
     });
     
     qrCode.addEventListener('error', function() {
-        console.log('QR code failed to load, refreshing...');
         refreshQR();
     });
 });

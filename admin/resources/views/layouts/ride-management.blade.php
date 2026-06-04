@@ -4,39 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Ride Management - Huber')</title>
-    <!-- Include CSS files -->
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    @vite(['resources/css/app.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     @yield('style')
 </head>
-<body>
-    <!-- Navbar -->
+<body class="bg-brand-warm text-brand-navy min-h-screen">
     @include('layouts.partials.navbar')
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar py-4" style="min-height: 100vh; border-radius: 20px 0 0 20px; box-shadow: 2px 0 12px rgba(0,0,0,0.04);">
-                @include('ride-management.sidebar')
-            </nav>
-            <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                @yield('main')
-            </main>
-        </div>
+    <div class="flex max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 gap-6 py-6">
+        <nav class="w-64 shrink-0 bg-white rounded-2xl border border-brand-border py-4 shadow-sm hidden lg:block" style="min-height: calc(100vh - 8rem);">
+            @include('ride-management.sidebar')
+        </nav>
+        <main class="flex-1 min-w-0">
+            @yield('main')
+        </main>
     </div>
-    <!-- Footer -->
     @include('layouts.partials.footer')
-    <!-- Include JS files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        AOS.init({
-            duration: 800,
-            once: true
-        });
-    </script>
+    @vite(['resources/js/app.js'])
     @yield('scripts')
 </body>
 </html> 
