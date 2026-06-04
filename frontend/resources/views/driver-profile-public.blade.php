@@ -21,7 +21,7 @@
                             <img src="{{ asset('storage/' . $user->profile_picture) }}" 
                                  alt="Profile" class="rounded-full mx-auto mb-3 w-[120px] h-[120px] object-cover border-4 border-white shadow-lg">
                         @else
-                            <div class="bg-brand-navy text-white rounded-full flex items-center justify-center mx-auto mb-3 w-[120px] h-[120px]" style="font-size: 3rem;">
+                            <div class="bg-brand-navy text-white rounded-full flex items-center justify-center mx-auto mb-3 w-[120px] h-[120px] text-5xl">
                                 <i class="fas fa-user"></i>
                             </div>
                         @endif
@@ -34,10 +34,8 @@
                         
                         <!-- Rating Display -->
                         <div class="flex items-center mb-3">
-                            <div class="text-2xl text-amber-400 mr-2">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <i class="fas fa-star{{ $i <= $averageOverallRating ? '' : '-o' }}"></i>
-                                @endfor
+                            <div class="mr-2">
+                                <x-star-rating :rating="$averageOverallRating" />
                             </div>
                             <div class="ml-2">
                                 <div class="font-bold text-brand-navy">{{ number_format($averageOverallRating, 1) }}/5</div>
@@ -130,18 +128,24 @@
                     <h5 class="text-lg font-semibold text-brand-navy"><i class="fas fa-chart-bar mr-2"></i>Rating Distribution</h5>
                 </div>
                 <div class="p-6">
+                    @php
+                        $barCss = '<style>';
+                        for($i = 5; $i >= 1; $i--) {
+                            $pct = (($ratingDistribution[$i] ?? 0) / $totalReviews) * 100;
+                            $barCss .= ".rating-bar-{$i}{width:" . number_format($pct, 1) . "%;}";
+                        }
+                        $barCss .= "</style>\n";
+                        echo $barCss;
+                    @endphp
                     @for($i = 5; $i >= 1; $i--)
                         <div class="flex items-center mb-3">
                             <div class="w-[60px] text-amber-400 font-medium">{{ $i }} ★</div>
                             <div class="flex-1 mx-3">
-                                @php
-                                    $percentage = $totalReviews > 0 ? ($ratingDistribution[$i] / $totalReviews) * 100 : 0;
-                                @endphp
                                 <div class="w-full bg-brand-border rounded-full h-2 overflow-hidden">
-                                    <div class="bg-amber-400 h-full rounded-full transition-all" style="width: {{ $percentage }}%"></div>
+                                    <div class="bg-amber-400 h-full rounded-full transition-all rating-bar-{{ $i }}"></div>
                                 </div>
                             </div>
-                            <div class="w-10 text-right text-brand-navy/60 text-sm">{{ $ratingDistribution[$i] }}</div>
+                            <div class="w-10 text-right text-brand-navy/60 text-sm">{{ $ratingDistribution[$i] ?? 0 }}</div>
                         </div>
                     @endfor
                 </div>
@@ -180,78 +184,7 @@
                     <h6 class="font-semibold text-brand-amber mb-4"><i class="fas fa-arrow-right mr-2"></i>Go Trips</h6>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach($filteredAvailableRides as $ride)
-                        <div class="bg-white rounded-xl border border-brand-border overflow-hidden hover:shadow-md transition-shadow">
-                            <div class="p-4">
-                                <div class="flex items-start justify-between mb-2">
-                                    <h6 class="font-semibold text-brand-amber">
-                                        <i class="fas fa-map-marker-alt mr-1"></i>
-                                        {{ $ride->station_location }}
-                                    </h6>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $ride->is_exclusive ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
-                                        {{ $ride->is_exclusive ? 'EXCLUSIVE' : 'SHARED' }}
-                                    </span>
-                                </div>
-                                
-                                <div class="text-center mb-2 text-brand-navy/40">
-                                    <i class="fas fa-arrow-down"></i>
-                                </div>
-                                
-                                <h6 class="font-semibold text-brand-amber mb-2">
-                                    <i class="fas fa-map-marker-alt mr-1"></i>
-                                    {{ $ride->destination }}
-                                </h6>
-                                
-                                <div class="grid grid-cols-2 gap-2 text-center mb-2">
-                                    <div>
-                                        <small class="text-brand-navy/60 block">Date</small>
-                                        <span class="font-semibold text-brand-navy text-sm">{{ $ride->date->format('M d, Y') }}</span>
-                                    </div>
-                                    <div>
-                                        <small class="text-brand-navy/60 block">Time</small>
-                                        <span class="font-semibold text-brand-navy text-sm">{{ $ride->time ? $ride->time->format('H:i') : '-' }}</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="grid grid-cols-2 gap-2 text-center mb-3">
-                                    <div>
-                                        <small class="text-brand-navy/60 block">Available Seats</small>
-                                        @if($ride->is_exclusive)
-                                            <span class="font-semibold text-green-600">Exclusive</span>
-                                        @else
-                                            <span class="font-semibold text-green-600">{{ $ride->available_seats }}</span>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        <small class="text-brand-navy/60 block">Price</small>
-                                        <span class="font-semibold text-brand-amber">
-                                            @if($ride->is_exclusive)
-                                                ${{ number_format($ride->go_to_exclusive_price, 2) }}
-                                            @else
-                                                ${{ number_format($ride->go_to_price_per_person, 2) }}/seat
-                                            @endif
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                @if($ride->go_completion_status === 'pending')
-                                    @if($ride->is_exclusive)
-                                        <a href="{{ route('booking.payment', ['rideId' => $ride->id, 'tripType' => 'go']) }}" 
-                                           class="block text-center bg-brand-amber hover:bg-brand-amber-600 text-white text-sm font-semibold py-2 px-4 rounded-brand transition">
-                                            <i class="fas fa-credit-card mr-1"></i>Book Exclusive
-                                        </a>
-                                    @else
-                                        <a href="{{ route('booking.seat-selection', ['rideId' => $ride->id, 'tripType' => 'go']) }}" 
-                                           class="block text-center bg-brand-amber hover:bg-brand-amber-600 text-white text-sm font-semibold py-2 px-4 rounded-brand transition">
-                                            <i class="fas fa-bookmark mr-1"></i>Select Seats
-                                        </a>
-                                    @endif
-                                @else
-                                    <div class="text-center">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">Not Available</span>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
+                            <x-ride-card :ride="$ride" type="go" />
                         @endforeach
                     </div>
                 </div>
@@ -263,78 +196,7 @@
                     <h6 class="font-semibold text-amber-500 mb-4"><i class="fas fa-arrow-left mr-2"></i>Return Trips</h6>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach($filteredReturnRides as $ride)
-                        <div class="bg-white rounded-xl border border-brand-border overflow-hidden hover:shadow-md transition-shadow">
-                            <div class="p-4">
-                                <div class="flex items-start justify-between mb-2">
-                                    <h6 class="font-semibold text-amber-500">
-                                        <i class="fas fa-map-marker-alt mr-1"></i>
-                                        {{ $ride->destination }}
-                                    </h6>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $ride->return_is_exclusive ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
-                                        {{ $ride->return_is_exclusive ? 'EXCLUSIVE' : 'SHARED' }}
-                                    </span>
-                                </div>
-                                
-                                <div class="text-center mb-2 text-brand-navy/40">
-                                    <i class="fas fa-arrow-down"></i>
-                                </div>
-                                
-                                <h6 class="font-semibold text-amber-500 mb-2">
-                                    <i class="fas fa-map-marker-alt mr-1"></i>
-                                    {{ $ride->station_location }}
-                                </h6>
-                                
-                                <div class="grid grid-cols-2 gap-2 text-center mb-2">
-                                    <div>
-                                        <small class="text-brand-navy/60 block">Date</small>
-                                        <span class="font-semibold text-brand-navy text-sm">{{ $ride->return_date->format('M d, Y') }}</span>
-                                    </div>
-                                    <div>
-                                        <small class="text-brand-navy/60 block">Time</small>
-                                        <span class="font-semibold text-brand-navy text-sm">{{ $ride->return_time ? $ride->return_time->format('H:i') : '-' }}</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="grid grid-cols-2 gap-2 text-center mb-3">
-                                    <div>
-                                        <small class="text-brand-navy/60 block">Available Seats</small>
-                                        @if($ride->return_is_exclusive)
-                                            <span class="font-semibold text-green-600">Exclusive</span>
-                                        @else
-                                            <span class="font-semibold text-green-600">{{ $ride->return_available_seats }}</span>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        <small class="text-brand-navy/60 block">Price</small>
-                                        <span class="font-semibold text-amber-500">
-                                            @if($ride->return_is_exclusive)
-                                                ${{ number_format($ride->return_exclusive_price, 2) }}
-                                            @else
-                                                ${{ number_format($ride->return_price_per_person, 2) }}/seat
-                                            @endif
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                @if($ride->return_completion_status === 'pending')
-                                    @if($ride->return_is_exclusive)
-                                        <a href="{{ route('booking.payment', ['rideId' => $ride->id, 'tripType' => 'return']) }}" 
-                                           class="block text-center bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold py-2 px-4 rounded-brand transition">
-                                            <i class="fas fa-credit-card mr-1"></i>Book Exclusive
-                                        </a>
-                                    @else
-                                        <a href="{{ route('booking.seat-selection', ['rideId' => $ride->id, 'tripType' => 'return']) }}" 
-                                           class="block text-center bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold py-2 px-4 rounded-brand transition">
-                                            <i class="fas fa-bookmark mr-1"></i>Select Seats
-                                        </a>
-                                    @endif
-                                @else
-                                    <div class="text-center">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">Not Available</span>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
+                            <x-ride-card :ride="$ride" type="return" />
                         @endforeach
                     </div>
                 </div>
@@ -352,58 +214,7 @@
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($previousRides as $ride)
-                    <div class="bg-white rounded-xl border border-brand-border overflow-hidden hover:shadow-md transition-shadow">
-                        <div class="p-4">
-                            <div class="flex items-start justify-between mb-2">
-                                <h6 class="font-semibold text-blue-600">
-                                    <i class="fas fa-map-marker-alt mr-1"></i>
-                                    {{ $ride->station_location }}
-                                </h6>
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <i class="fas fa-check-circle"></i>Completed
-                                </span>
-                            </div>
-                            
-                            <div class="text-center mb-2 text-brand-navy/40">
-                                <i class="fas fa-arrow-down"></i>
-                            </div>
-                            
-                            <h6 class="font-semibold text-blue-600 mb-2">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                {{ $ride->destination }}
-                            </h6>
-                            
-                            <div class="grid grid-cols-2 gap-2 text-center mb-2">
-                                <div>
-                                    <small class="text-brand-navy/60 block">Date</small>
-                                    <span class="font-semibold text-brand-navy text-sm">{{ $ride->date->format('M d, Y') }}</span>
-                                </div>
-                                <div>
-                                    <small class="text-brand-navy/60 block">Time</small>
-                                    <span class="font-semibold text-brand-navy text-sm">{{ $ride->time ? $ride->time->format('H:i') : '-' }}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-2 text-center">
-                                <div>
-                                    <small class="text-brand-navy/60 block">Type</small>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $ride->is_exclusive ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
-                                        {{ $ride->is_exclusive ? 'EXCLUSIVE' : 'SHARED' }}
-                                    </span>
-                                </div>
-                                <div>
-                                    <small class="text-brand-navy/60 block">Price</small>
-                                    <span class="font-semibold text-blue-600">
-                                        @if($ride->is_exclusive)
-                                            ${{ number_format($ride->go_to_exclusive_price, 2) }}
-                                        @else
-                                            ${{ number_format($ride->go_to_price_per_person, 2) }}/seat
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        <x-ride-card :ride="$ride" type="completed" />
                     @endforeach
                 </div>
             </div>
@@ -437,7 +248,7 @@
                                             <h6 class="font-semibold text-brand-navy mb-0.5">{{ $review->user ? $review->user->name : 'Anonymous' }}</h6>
                                             <small class="text-brand-navy/60">
                                                 {{ $review->created_at->format('M d, Y') }}
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">{{ strtoupper($review->trip_type) }} TRIP</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">{{ \Illuminate\Support\Str::upper($review->trip_type) }} TRIP</span>
                                             </small>
                                         </div>
                                     </div>
@@ -447,11 +258,11 @@
                                         <div class="flex items-center text-sm">
                                             <i class="fas fa-map-marker-alt text-brand-amber mr-2"></i>
                                             <span class="font-semibold text-brand-navy">
-                                                {{ $review->trip_type === 'return' ? $review->ride->destination : $review->ride->station_location }}
+                                                {{ $review->trip_type === 'return' ? optional($review->ride)->destination : optional($review->ride)->station_location }}
                                             </span>
                                             <i class="fas fa-arrow-right mx-2 text-brand-navy/40"></i>
                                             <span class="font-semibold text-brand-navy">
-                                                {{ $review->trip_type === 'return' ? $review->ride->station_location : $review->ride->destination }}
+                                                {{ $review->trip_type === 'return' ? optional($review->ride)->station_location : optional($review->ride)->destination }}
                                             </span>
                                         </div>
                                     </div>
@@ -459,7 +270,7 @@
                                     <!-- Review Text -->
                                     @if($review->review_text)
                                         <div class="mb-3">
-                                            <p class="text-brand-navy/80 italic">"{{ $review->review_text }}"</p>
+                                            <p class="text-brand-navy/80 italic">&ldquo;{{ $review->review_text }}&rdquo;</p>
                                         </div>
                                     @endif
                                 </div>
@@ -467,10 +278,8 @@
                                 <div class="md:col-span-1">
                                     <!-- Overall Rating -->
                                     <div class="text-center mb-3">
-                                        <div class="text-2xl text-amber-400 mb-1">
-                                            @for($i = 1; $i <= 5; $i++)
-                                                <i class="fas fa-star{{ $i <= $review->overall_rating ? '' : '-o' }}"></i>
-                                            @endfor
+                                        <div class="mb-1">
+                                            <x-star-rating :rating="$review->overall_rating" />
                                         </div>
                                         <div class="font-bold text-brand-navy">{{ $review->overall_rating }}/5</div>
                                         <small class="text-brand-navy/60">Overall Rating</small>
