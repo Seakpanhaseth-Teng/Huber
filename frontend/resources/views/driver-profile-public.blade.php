@@ -128,21 +128,13 @@
                     <h5 class="text-lg font-semibold text-brand-navy"><i class="fas fa-chart-bar mr-2"></i>Rating Distribution</h5>
                 </div>
                 <div class="p-6">
-                    @php
-                        $barCss = '<style>';
-                        for($i = 5; $i >= 1; $i--) {
-                            $pct = (($ratingDistribution[$i] ?? 0) / $totalReviews) * 100;
-                            $barCss .= ".rating-bar-{$i}{width:" . number_format($pct, 1) . "%;}";
-                        }
-                        $barCss .= "</style>\n";
-                        echo $barCss;
-                    @endphp
                     @for($i = 5; $i >= 1; $i--)
+                        @php $pct = number_format((($ratingDistribution[$i] ?? 0) / $totalReviews) * 100, 1); @endphp
                         <div class="flex items-center mb-3">
                             <div class="w-[60px] text-amber-400 font-medium">{{ $i }} ★</div>
                             <div class="flex-1 mx-3">
                                 <div class="w-full bg-brand-border rounded-full h-2 overflow-hidden">
-                                    <div class="bg-amber-400 h-full rounded-full transition-all rating-bar-{{ $i }}"></div>
+                                    <div class="bg-amber-400 h-full rounded-full transition-all" data-width="{{ $pct }}"></div>
                                 </div>
                             </div>
                             <div class="w-10 text-right text-brand-navy/60 text-sm">{{ $ratingDistribution[$i] ?? 0 }}</div>
@@ -307,4 +299,12 @@
         @endif
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.querySelectorAll('[data-width]').forEach(function(el) {
+        el.style.width = el.getAttribute('data-width') + '%';
+    });
+</script>
 @endsection
